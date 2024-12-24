@@ -1,6 +1,6 @@
 package com.example.userManagementService.feign;
 
-import com.example.userManagementService.DTO.appointmentDTO;
+import com.example.userManagementService.dto.appointmentDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;

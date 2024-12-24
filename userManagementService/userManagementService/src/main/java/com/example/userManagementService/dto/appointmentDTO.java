@@ -1,4 +1,4 @@
-package com.example.userManagementService.DTO;
+package com.example.userManagementService.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;

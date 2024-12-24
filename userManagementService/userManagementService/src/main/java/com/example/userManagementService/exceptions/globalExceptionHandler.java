@@ -1,20 +1,29 @@
 package com.example.userManagementService.exceptions;
 
-import com.example.userManagementService.exceptions.PatientNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
-public class GlobalExceptionHandler {
+public class globalExceptionHandler {
 
-    @ExceptionHandler(PatientNotFoundException.class)
-    public ResponseEntity<?> handlePatientNotFoundException(PatientNotFoundException ex) {
+    @ExceptionHandler(patientNotFoundException.class)
+    public ResponseEntity<?> handlePatientNotFoundException(patientNotFoundException ex) {
         return new ResponseEntity<>(new ErrorResponse("Error", ex.getMessage()), HttpStatus.NOT_FOUND);
     }
 
-    // Error response class
+    @ExceptionHandler(doctorNotFoundException.class)
+    public ResponseEntity<?> handleDoctorNotFoundException(doctorNotFoundException ex) {
+        return new ResponseEntity<>(new ErrorResponse("Error", ex.getMessage()), HttpStatus.NOT_FOUND);
+    }
+
+
+    @ExceptionHandler(adminNotFoundException.class)
+    public ResponseEntity<?> handleAdminNotFoundException(adminNotFoundException ex) {
+        return new ResponseEntity<>(new ErrorResponse("Error", ex.getMessage()), HttpStatus.NOT_FOUND);
+    }
+
     public static class ErrorResponse {
         private String error;
         private String message;
@@ -32,4 +41,5 @@ public class GlobalExceptionHandler {
             return message;
         }
     }
+
 }

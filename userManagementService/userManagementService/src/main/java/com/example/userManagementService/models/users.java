@@ -3,7 +3,6 @@ package com.example.userManagementService.models;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
@@ -12,18 +11,18 @@ import java.io.Serializable;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "patients")
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
+@Table(name = "users")
 @Data
-public class patient implements Serializable{
+@AllArgsConstructor
+@NoArgsConstructor
+public class users implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public Long id;
-    @Column(name = "medical_history")
-    public String medicalHistory;
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
-    private users user;
+    private Long id;
+    private String firstName;
+    private String lastName;
+    private String email;
+    private String phone;
+    private String address;
+    private int age;
 }

@@ -1,10 +1,10 @@
 package com.example.userManagementService.controller;
 
-import com.example.userManagementService.DTO.appointmentDTO;
-import com.example.userManagementService.exceptions.PatientNotFoundException;
+import com.example.userManagementService.dto.appointmentDTO;
+import com.example.userManagementService.exceptions.patientNotFoundException;
 import com.example.userManagementService.models.patient;
+import com.example.userManagementService.service.patientService;
 import com.example.userManagementService.feign.appointmentClient;
-import com.example.userManagementService.service.patientServ;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,33 +13,31 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/patients")
+@RequestMapping("/api/patient")
 public class patientController {
+
     @Autowired
-    private final patientServ patientService;
+    private final patientService patientService;
     private final appointmentDTO appointmentDTO;
 
     @Autowired
     private appointmentClient appointmentClient;
 
     @Autowired
-    public patientController(patientServ patientService, appointmentDTO appointmentDTO) {
+    public patientController(patientService patientService, appointmentDTO appointmentDTO) {
         this.patientService = patientService;
         this.appointmentDTO = appointmentDTO;
     }
 
-    @PostMapping("/create")
-    public patient createPatient(@RequestBody patient newPatient) {
-        return patientService.createPatient(newPatient);
-    }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<patient> getPatientById(@PathVariable Long id) {
         try {
             patient patient = patientService.getPatientById(id);
             return new ResponseEntity<>(patient, HttpStatus.OK);
-        } catch (PatientNotFoundException ex) {
-            throw new PatientNotFoundException("Patient with ID " + id + " not found");
+        } catch (patientNotFoundException ex) {
+            throw new patientNotFoundException("Patient with ID " + id + " not found");
         }
     }
 
@@ -62,8 +60,8 @@ public class patientController {
     public List<appointmentDTO> getPatientAppointments(@PathVariable Long patientId) {
         try{        return appointmentClient.getAppointmentsByPatientId(patientId);
         }
-        catch (PatientNotFoundException ex){
-            throw new PatientNotFoundException("Patient with ID " + patientId + " not found");
+        catch (patientNotFoundException ex){
+            throw new patientNotFoundException("Patient with ID " + patientId + " not found");
          }
         }
     }
