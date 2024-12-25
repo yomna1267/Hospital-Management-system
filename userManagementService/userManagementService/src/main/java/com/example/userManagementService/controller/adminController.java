@@ -4,7 +4,7 @@ import com.example.userManagementService.models.doctor;
 import com.example.userManagementService.models.patient;
 import com.example.userManagementService.models.users;
 import com.example.userManagementService.service.adminService;
-import com.example.userManagementService.service.doctorService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,10 +25,16 @@ public class adminController {
         return ResponseEntity.ok(createdUser);
     }
 
-    @PutMapping("/")
-    public ResponseEntity<users> updateAdmin(@RequestBody users user) {
-        users updated = adminService.updateAdmin(user);
-        return ResponseEntity.ok(updated);
+    @PutMapping("/{id}")
+    public ResponseEntity<users> updateAdmin(@PathVariable("id") Long id, @RequestBody users updatedUser) {
+        updatedUser.setId(id);
+        users updated = adminService.updateAdmin(updatedUser);
+
+        if (updated != null) {
+            return ResponseEntity.ok(updated);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteAdmin(@PathVariable long id) {
@@ -56,10 +62,15 @@ public class adminController {
         return ResponseEntity.ok(createdDoctor);
     }
 
-    @PutMapping("/doctor")
-    public ResponseEntity<doctor> updateDoctor(@RequestBody doctor updatedDoctor) {
-        doctor updated = adminService.updateDoctor(updatedDoctor);
-        return ResponseEntity.ok(updated);
+    @PutMapping("doctor/{id}")
+    public ResponseEntity<doctor> updateDoctor(@PathVariable("id") Long doctorId, @RequestBody doctor updatedDoctor) {
+        doctor doctor = adminService.updateDoctor(doctorId, updatedDoctor);
+
+        if (doctor != null) {
+            return new ResponseEntity<>(doctor, HttpStatus.OK); // Return updated doctor if successful
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND); // If doctor not found
+        }
     }
 
     @DeleteMapping("/doctor/{id}")
@@ -88,10 +99,15 @@ public class adminController {
         return ResponseEntity.ok(createdPatient);
     }
 
-    @PutMapping("/patient")
-    public ResponseEntity<patient> updatePatient(@RequestBody patient updatedPatient) {
-        patient updated = adminService.updatePatient(updatedPatient);
-        return ResponseEntity.ok(updated);
+    @PutMapping("/patient/{id}")
+    public ResponseEntity<patient> updatePatient(@PathVariable("id") Long id, @RequestBody patient updatedPatient) {
+        patient updated = adminService.updatePatient(id, updatedPatient); // Pass the ID and updated patient data
+
+        if (updated != null) {
+            return ResponseEntity.ok(updated); // Return updated patient if successful
+        } else {
+            return ResponseEntity.notFound().build(); // If patient not found
+        }
     }
 
     @DeleteMapping("/patient/{id}")

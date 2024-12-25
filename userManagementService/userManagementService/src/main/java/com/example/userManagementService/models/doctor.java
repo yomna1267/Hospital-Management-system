@@ -4,9 +4,8 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.GenericGenerator;
-
 import java.io.Serializable;
+
 @Entity
 @Table(name = "doctors")
 @Data
@@ -14,7 +13,6 @@ import java.io.Serializable;
 @NoArgsConstructor
 public class doctor implements Serializable {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String specialty;
     private String experienceYears;

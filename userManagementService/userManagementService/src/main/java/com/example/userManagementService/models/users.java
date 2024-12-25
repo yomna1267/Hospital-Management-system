@@ -9,6 +9,7 @@ import org.hibernate.annotations.GenericGenerator;
 
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -21,8 +22,13 @@ public class users implements Serializable {
     private Long id;
     private String firstName;
     private String lastName;
+    private String username;
+    private String password;
     private String email;
     private String phone;
     private String address;
     private int age;
+    @ManyToOne
+    @JoinColumn(name = "role_id", nullable = false)
+    private role role;
 }

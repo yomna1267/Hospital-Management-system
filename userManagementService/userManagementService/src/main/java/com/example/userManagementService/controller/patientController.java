@@ -16,17 +16,13 @@ import java.util.List;
 @RequestMapping("/api/patient")
 public class patientController {
 
-    @Autowired
     private final patientService patientService;
-    private final appointmentDTO appointmentDTO;
+    private final appointmentClient appointmentClient;
 
     @Autowired
-    private appointmentClient appointmentClient;
-
-    @Autowired
-    public patientController(patientService patientService, appointmentDTO appointmentDTO) {
+    public patientController(patientService patientService, com.example.userManagementService.feign.appointmentClient appointmentClient) {
         this.patientService = patientService;
-        this.appointmentDTO = appointmentDTO;
+        this.appointmentClient = appointmentClient;
     }
 
 
@@ -47,9 +43,12 @@ public class patientController {
     }
 
     @PutMapping("/{patientId}/appointments/{appointmentId}")
-    public appointmentDTO rescheduleAppointment(@PathVariable Long patientId, @PathVariable Long appointmentId, @RequestBody CharSequence newDate) {
+    public appointmentDTO rescheduleAppointment(@PathVariable Long patientId,
+                                                @PathVariable Long appointmentId,
+                                                @RequestBody CharSequence newDate) {
         return appointmentClient.updateAppointment(patientId, appointmentId, "\"" + newDate + "\"");
     }
+
 
     @DeleteMapping("/{patientId}/appointments/{appointmentId}")
     public appointmentDTO cancelAppointment(@PathVariable Long patientId, @PathVariable Long appointmentId) {
@@ -58,10 +57,24 @@ public class patientController {
 
     @GetMapping("{patientId}/appointments")
     public List<appointmentDTO> getPatientAppointments(@PathVariable Long patientId) {
-        try{        return appointmentClient.getAppointmentsByPatientId(patientId);
+        try{
+            return appointmentClient.getAppointmentsByPatientId(patientId);
         }
         catch (patientNotFoundException ex){
             throw new patientNotFoundException("Patient with ID " + patientId + " not found");
-         }
         }
     }
+
+    @GetMapping("/{patientId}/appointments/{appointmentId}")
+    public appointmentDTO getPatientAppointment(@PathVariable Long patientId, @PathVariable Long appointmentId){
+        try{
+            return appointmentClient.getPatientAppointment(patientId, appointmentId);
+        }
+        catch (patientNotFoundException ex){
+            throw new patientNotFoundException("Patient with ID " + patientId + " not found");
+        }
+    }
+
+
+}
+

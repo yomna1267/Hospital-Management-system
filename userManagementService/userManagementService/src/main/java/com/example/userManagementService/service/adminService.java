@@ -7,7 +7,6 @@ import com.example.userManagementService.models.doctor;
 import com.example.userManagementService.models.patient;
 import com.example.userManagementService.models.users;
 import com.example.userManagementService.repository.doctorRepository;
-import com.example.userManagementService.repository.patientRepo;
 import com.example.userManagementService.repository.userRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,11 +18,11 @@ import java.util.Optional;
 @Service
 public class adminService {
     private final doctorRepository doctorRepository;
-    private final patientRepo patientRepository;
+    private final com.example.userManagementService.repository.patientRepository patientRepository;
     private final userRepository userRepository;
 
     @Autowired
-    public adminService(doctorRepository doctorRepository, patientRepo patientRepository, com.example.userManagementService.repository.userRepository userRepository) {
+    public adminService(doctorRepository doctorRepository, com.example.userManagementService.repository.patientRepository patientRepository, com.example.userManagementService.repository.userRepository userRepository) {
         this.doctorRepository = doctorRepository;
         this.patientRepository = patientRepository;
         this.userRepository = userRepository;
@@ -36,9 +35,19 @@ public class adminService {
     }
 
     @Transactional
-    public users updateAdmin(users updatedUser){
-        users savedUser = userRepository.save(updatedUser);
-        return savedUser;
+    public users updateAdmin(users updatedUser) {
+        users existingUser = userRepository.findById(updatedUser.getId()).orElse(null);
+        if (existingUser != null) {
+            existingUser.setFirstName(updatedUser.getFirstName());
+            existingUser.setLastName(updatedUser.getLastName());
+            existingUser.setEmail(updatedUser.getEmail());
+            existingUser.setPhone(updatedUser.getPhone());
+            existingUser.setAddress(updatedUser.getAddress());
+            existingUser.setAge(updatedUser.getAge());
+
+            return userRepository.save(existingUser);
+        }
+        return null;
     }
 
     @Transactional
@@ -68,16 +77,22 @@ public class adminService {
     public doctor addDoctor(doctor newDoctor) {
         users savedUser = userRepository.save(newDoctor.getUser());
         newDoctor.setUser(savedUser);
+        newDoctor.setId(savedUser.getId());
         doctor savedDoctor= doctorRepository.save(newDoctor);
         return savedDoctor;
     }
 
     @Transactional
-    public doctor updateDoctor(doctor updatedDoctor) {
-        users savedUser = userRepository.save(updatedDoctor.getUser());
-        updatedDoctor.setUser(savedUser);
-        doctor savedDoctor= doctorRepository.save(updatedDoctor);
-        return savedDoctor;
+    public doctor updateDoctor(Long doctorId, doctor updatedDoctor) {
+        doctor existingDoctor = doctorRepository.findById(doctorId).orElse(null);
+
+        if (existingDoctor != null) {
+            existingDoctor.setUser(updatedDoctor.getUser());
+            existingDoctor.setSpecialty(updatedDoctor.getSpecialty());
+            existingDoctor.setExperienceYears(updatedDoctor.getExperienceYears());
+            return doctorRepository.save(existingDoctor);
+        }
+        return null;
     }
 
     @Transactional
@@ -105,16 +120,21 @@ public class adminService {
     public patient addPatient(patient newPatient) {
         users savedUser = userRepository.save(newPatient.getUser());
         newPatient.setUser(savedUser);
+        newPatient.setId(savedUser.getId());
         patient savedPatient = patientRepository.save(newPatient);
         return savedPatient;
     }
 
     @Transactional
-    public patient updatePatient(patient updatedPatient) {
-        users savedUser = userRepository.save(updatedPatient.getUser());
-        updatedPatient.setUser(savedUser);
-        patient savedPatient = patientRepository.save(updatedPatient);
-        return savedPatient;
+    public patient updatePatient(Long id, patient updatedPatient) {
+        patient existingPatient = patientRepository.findById(id).orElse(null);
+
+        if (existingPatient != null) {
+            existingPatient.setUser(updatedPatient.getUser());
+            existingPatient.setMedicalHistory(updatedPatient.getMedicalHistory());
+            return patientRepository.save(existingPatient);
+        }
+        return null; // Return null if patient is not found
     }
 
     @Transactional
