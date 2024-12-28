@@ -1,35 +1,43 @@
 package com.example.userManagementService.service;
 
-import com.example.userManagementService.exceptions.adminNotFoundException;
+import com.example.userManagementService.exceptions.userNotFoundException;
 import com.example.userManagementService.exceptions.patientNotFoundException;
 import com.example.userManagementService.exceptions.doctorNotFoundException;
 import com.example.userManagementService.models.doctor;
 import com.example.userManagementService.models.patient;
+import com.example.userManagementService.models.role;
 import com.example.userManagementService.models.users;
 import com.example.userManagementService.repository.doctorRepository;
 import com.example.userManagementService.repository.userRepository;
+import com.example.userManagementService.repository.patientRepository;
+import com.example.userManagementService.repository.roleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class adminService {
     private final doctorRepository doctorRepository;
-    private final com.example.userManagementService.repository.patientRepository patientRepository;
+    private final patientRepository patientRepository;
     private final userRepository userRepository;
+    private final roleRepository roleRepository;
 
     @Autowired
-    public adminService(doctorRepository doctorRepository, com.example.userManagementService.repository.patientRepository patientRepository, com.example.userManagementService.repository.userRepository userRepository) {
+    public adminService(doctorRepository doctorRepository, patientRepository patientRepository, userRepository userRepository, com.example.userManagementService.repository.roleRepository roleRepository) {
         this.doctorRepository = doctorRepository;
         this.patientRepository = patientRepository;
         this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
     }
 
+    //ADMIN
     @Transactional
     public users addAdmin(users newUser){
+        role adminRole = (role) roleRepository.findByname("ADMIN")
+                .orElseThrow(() -> new RuntimeException("Role 'Admin' not found"));
+        newUser.setRole(adminRole);
         users savedUser = userRepository.save(newUser);
         return savedUser;
     }
@@ -44,6 +52,7 @@ public class adminService {
             existingUser.setPhone(updatedUser.getPhone());
             existingUser.setAddress(updatedUser.getAddress());
             existingUser.setAge(updatedUser.getAge());
+            existingUser.setGender(updatedUser.getGender());
 
             return userRepository.save(existingUser);
         }
@@ -51,14 +60,13 @@ public class adminService {
     }
 
     @Transactional
-    public users getAdminById(long id) {
-        Optional<users> admins= userRepository.findById(id);
-        if (admins.isPresent()) {
-            return admins.get();
+    public users getUserById(long id) {
+        Optional<users> user= userRepository.findById(id);
+        if (user.isPresent()) {
+            return user.get();
         }
         else{
-            System.err.println("admin with ID " + id + " not found");
-            throw new adminNotFoundException("admin with ID " + id + " not found");
+            throw new userNotFoundException("user with ID " + id + " not found");
         }
 
     }
@@ -70,11 +78,21 @@ public class adminService {
 
     @Transactional
     public List<users> getAllAdmins() {
-        return userRepository.findAll();
+        return userRepository.findByRoleName("ADMIN");
     }
 
     @Transactional
+    public List<users> getAllUsers(){
+        return userRepository.findAll();
+    }
+
+
+    //DOCTOR
+    @Transactional
     public doctor addDoctor(doctor newDoctor) {
+        role doctorRole = (role) roleRepository.findByname("DOCTOR")
+                .orElseThrow(() -> new RuntimeException("Role 'Doctor' not found"));
+        newDoctor.getUser().setRole(doctorRole);
         users savedUser = userRepository.save(newDoctor.getUser());
         newDoctor.setUser(savedUser);
         newDoctor.setId(savedUser.getId());
@@ -84,16 +102,33 @@ public class adminService {
 
     @Transactional
     public doctor updateDoctor(Long doctorId, doctor updatedDoctor) {
-        doctor existingDoctor = doctorRepository.findById(doctorId).orElse(null);
+        doctor existingDoctor = doctorRepository.findById(doctorId)
+                .orElseThrow(() -> new doctorNotFoundException("Doctor with ID " + doctorId + " not found"));
 
-        if (existingDoctor != null) {
-            existingDoctor.setUser(updatedDoctor.getUser());
-            existingDoctor.setSpecialty(updatedDoctor.getSpecialty());
-            existingDoctor.setExperienceYears(updatedDoctor.getExperienceYears());
-            return doctorRepository.save(existingDoctor);
+        users existingUser = existingDoctor.getUser();
+        users updatedUser = updatedDoctor.getUser();
+
+        existingUser.setFirstName(updatedUser.getFirstName());
+        existingUser.setLastName(updatedUser.getLastName());
+        existingUser.setUsername(updatedUser.getUsername());
+        existingUser.setPhone(updatedUser.getPhone());
+        existingUser.setAddress(updatedUser.getAddress());
+        existingUser.setGender(updatedUser.getGender());
+        existingUser.setAge(updatedUser.getAge());
+
+        if (!existingUser.getEmail().equals(updatedUser.getEmail())) {
+            if (userRepository.existsByEmail(updatedUser.getEmail())) {
+                throw new RuntimeException("Email already exists");
+            }
+            existingUser.setEmail(updatedUser.getEmail());
         }
-        return null;
+
+        existingDoctor.setSpecialty(updatedDoctor.getSpecialty());
+        existingDoctor.setExperienceYears(updatedDoctor.getExperienceYears());
+
+        return doctorRepository.save(existingDoctor);
     }
+
 
     @Transactional
     public void deleteDoctor(doctor deletedDoctor) {
@@ -111,13 +146,17 @@ public class adminService {
         if (doctor.isPresent()) {
             return doctor.get();
         } else {
-            System.err.println("doctor with ID " + id + " not found");
             throw new doctorNotFoundException("doctor with ID " + id + " not found");
         }
     }
 
+
+    //PATIENT
     @Transactional
     public patient addPatient(patient newPatient) {
+        role patientRole = (role) roleRepository.findByname("PATIENT")
+                .orElseThrow(() -> new RuntimeException("Role 'Patient' not found"));
+        newPatient.getUser().setRole(patientRole);
         users savedUser = userRepository.save(newPatient.getUser());
         newPatient.setUser(savedUser);
         newPatient.setId(savedUser.getId());
@@ -127,15 +166,31 @@ public class adminService {
 
     @Transactional
     public patient updatePatient(Long id, patient updatedPatient) {
-        patient existingPatient = patientRepository.findById(id).orElse(null);
+        patient existingPatient = patientRepository.findById(id)
+                .orElseThrow(() -> new patientNotFoundException("Patient with ID " + id + " not found"));
 
-        if (existingPatient != null) {
-            existingPatient.setUser(updatedPatient.getUser());
-            existingPatient.setMedicalHistory(updatedPatient.getMedicalHistory());
-            return patientRepository.save(existingPatient);
+        users existingUser = existingPatient.getUser();
+        users updatedUser = updatedPatient.getUser();
+
+        existingUser.setFirstName(updatedUser.getFirstName());
+        existingUser.setLastName(updatedUser.getLastName());
+        existingUser.setUsername(updatedUser.getUsername());
+        existingUser.setPhone(updatedUser.getPhone());
+        existingUser.setAddress(updatedUser.getAddress());
+        existingUser.setGender(updatedUser.getGender());
+        existingUser.setAge(updatedUser.getAge());
+
+        if (!existingUser.getEmail().equals(updatedUser.getEmail())) {
+            if (userRepository.existsByEmail(updatedUser.getEmail())) {
+                throw new RuntimeException("Email already exists");
+            }
+            existingUser.setEmail(updatedUser.getEmail());
         }
-        return null; // Return null if patient is not found
+        existingPatient.setMedicalHistory(updatedPatient.getMedicalHistory());
+
+        return patientRepository.save(existingPatient);
     }
+
 
     @Transactional
     public void deletePatient(patient deletedPatient) {
@@ -154,9 +209,17 @@ public class adminService {
             return patient.get();
         }
         else{
-            System.err.println("patient with ID " + id + " not found");
             throw new patientNotFoundException("patient with ID " + id + " not found");
         }
     }
-
+    @Transactional
+    public users getUserByUsername(String userName) {
+        Optional<users> user= userRepository.findByUsername(userName);
+        if (user.isPresent()) {
+            return user.get();
+        }
+        else{
+            throw new userNotFoundException("user with username " + userName + " not found");
+        }
+    }
 }

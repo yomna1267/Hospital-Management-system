@@ -1,13 +1,14 @@
 package com.example.userManagementService.controller;
 
 import com.example.userManagementService.dto.appointmentDTO;
+import com.example.userManagementService.dto.patientDTO;
 import com.example.userManagementService.exceptions.doctorNotFoundException;
 import com.example.userManagementService.exceptions.patientNotFoundException;
 import com.example.userManagementService.feign.appointmentClient;
 import com.example.userManagementService.models.doctor;
-import com.example.userManagementService.models.patient;
+import com.example.userManagementService.repository.patientRepository;
 import com.example.userManagementService.service.doctorService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.example.userManagementService.service.patientService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,12 +22,16 @@ import java.util.List;
 @RequestMapping("/api/doctor")
 public class doctorController {
     private final doctorService doctorService;
+    private final patientService patientService;
     private final appointmentClient appointmentClient;
+    private final com.example.userManagementService.repository.patientRepository patientRepository;
 
 
-    public doctorController(doctorService doctorService, com.example.userManagementService.feign.appointmentClient appointmentClient) {
+    public doctorController(doctorService doctorService, com.example.userManagementService.service.patientService patientService, com.example.userManagementService.feign.appointmentClient appointmentClient, patientRepository patientRepository) {
         this.doctorService = doctorService;
+        this.patientService = patientService;
         this.appointmentClient = appointmentClient;
+        this.patientRepository = patientRepository;
     }
 
     @GetMapping("/{id}")
@@ -38,26 +43,38 @@ public class doctorController {
             throw new doctorNotFoundException("doctor with ID " + id + " not found");
         }
     }
+    @GetMapping("/{doctorId}/search/{patientId}")
+    public patientDTO searchPatientById(@PathVariable Long doctorId, @PathVariable Long patientId) {
+        List<appointmentDTO> doctorAppointments = getDoctorAppointments(doctorId);
+        appointmentDTO patientAppointment = doctorAppointments
+                .stream()
+                .filter(appointment -> appointment.getPatientId().equals(patientId))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Appointment not found for patient with ID: " + patientId));
+        patientDTO patient = patientService.mapToPatientDTO(patientAppointment);
+        return patient;
+    }
 
-    @GetMapping("{doctorId}/appointments")
+    @GetMapping("/{doctorId}/appointments")
     public List<appointmentDTO> getDoctorAppointments(@PathVariable Long doctorId) {
-        try{
-            return appointmentClient.getAppointmentsByDoctorId(doctorId);
-        }
-        catch (doctorNotFoundException ex){
+        doctor doctor = doctorService.getDoctorById(doctorId);
+        if (doctor == null) {
             throw new doctorNotFoundException("Doctor with ID " + doctorId + " not found");
+        }
+        else {
+             return appointmentClient.getAppointmentsByDoctorId(doctorId);
         }
     }
 
     @GetMapping("/doctors/{doctorId}/appointments/{appointmentId}")
     public appointmentDTO getDoctorAppointment(@PathVariable Long doctorId, @PathVariable Long appointmentId){
-        try{
-            return appointmentClient.getDoctorAppointment(doctorId, appointmentId);
-        }
-        catch (doctorNotFoundException ex){
+        doctor doctor = doctorService.getDoctorById(doctorId);
+        if (doctor == null) {
             throw new doctorNotFoundException("Doctor with ID " + doctorId + " not found");
         }
+        else {
+            return appointmentClient.getDoctorAppointment(doctorId, appointmentId);
+        }
     }
-
 
 }

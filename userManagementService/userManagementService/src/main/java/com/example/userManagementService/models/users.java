@@ -22,11 +22,15 @@ public class users implements Serializable {
     private Long id;
     private String firstName;
     private String lastName;
+    @Column(unique = true)
     private String username;
     private String password;
+    @Column(unique = true)
     private String email;
+    @Column(unique = true)
     private String phone;
     private String address;
+    private String gender;
     private int age;
     @ManyToOne
     @JoinColumn(name = "role_id", nullable = false)

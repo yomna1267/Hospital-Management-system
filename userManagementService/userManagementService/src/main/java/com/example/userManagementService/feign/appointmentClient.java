@@ -3,12 +3,11 @@ package com.example.userManagementService.feign;
 import com.example.userManagementService.dto.appointmentDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@FeignClient(name = "appointment-service", url = "http://localhost:8081")
+@FeignClient(name = "appointment-service", url = "http://localhost:8081", configuration = feignConfig.class)
 public interface appointmentClient {
     @PostMapping("/api/patients/{patientId}/appointments")
     appointmentDTO createAppointment(@PathVariable Long patientId, @RequestBody appointmentDTO appointment);
@@ -28,11 +27,9 @@ public interface appointmentClient {
     @GetMapping("api/doctors/{doctorId}/appointments")
     List<appointmentDTO> getAppointmentsByDoctorId(@PathVariable Long doctorId);
 
-    @GetMapping("/doctors/{doctorId}/appointments/{appointmentId}")
+    @GetMapping("api/doctors/{doctorId}/appointments/{appointmentId}")
     appointmentDTO getDoctorAppointment(@PathVariable Long doctorId, @PathVariable Long appointmentId);
 
-    @GetMapping("/patients/{patientId}/appointments/{appointmentId}")
+    @GetMapping("api/patients/{patientId}/appointments/{appointmentId}")
     appointmentDTO getPatientAppointment(@PathVariable Long patientId, @PathVariable Long appointmentId);
-
-
 }

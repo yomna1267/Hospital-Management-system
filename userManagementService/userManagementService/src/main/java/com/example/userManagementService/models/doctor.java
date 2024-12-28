@@ -16,6 +16,7 @@ public class doctor implements Serializable {
     private Long id;
     private String specialty;
     private String experienceYears;
+
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private users user;
