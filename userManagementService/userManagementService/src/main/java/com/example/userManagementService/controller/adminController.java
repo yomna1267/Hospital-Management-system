@@ -1,5 +1,6 @@
 package com.example.userManagementService.controller;
 
+import com.example.userManagementService.exceptions.userNotFoundException;
 import com.example.userManagementService.models.doctor;
 import com.example.userManagementService.models.patient;
 import com.example.userManagementService.models.users;
@@ -28,23 +29,28 @@ public class adminController {
         response.put("username", createdUser.getUsername());
         response.put("password", createdUser.getPassword());
 
-        return ResponseEntity.ok(response);    }
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
 
     @PutMapping("/{id}")
     public ResponseEntity<Map<String, String>> updateAdmin(@PathVariable("id") Long id, @RequestBody users updatedUser) {
-        updatedUser.setId(id);
-        users updated = adminService.updateAdmin(updatedUser);
-
-        if (updated != null) {
+        try {
+            updatedUser.setId(id);
+            users updated = adminService.updateAdmin(updatedUser);
             Map<String, String> response = new HashMap<>();
-            response.put("username", updatedUser.getUsername());
-            response.put("password", updatedUser.getPassword());
+            response.put("username", updated.getUsername());
+            response.put("password", updated.getPassword());
 
-            return ResponseEntity.ok(response);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (userNotFoundException e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Admin not found");
+            errorResponse.put("message", e.getMessage());
+
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
         }
     }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteAdmin(@PathVariable long id) {
         users adminToDelete = adminService.getUserById(id);

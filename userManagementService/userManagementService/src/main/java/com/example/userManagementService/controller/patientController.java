@@ -2,6 +2,7 @@ package com.example.userManagementService.controller;
 
 import com.example.userManagementService.dto.appointmentDTO;
 import com.example.userManagementService.dto.doctorDTO;
+import com.example.userManagementService.dto.scanResultDTO;
 import com.example.userManagementService.exceptions.doctorNotFoundException;
 import com.example.userManagementService.exceptions.patientNotFoundException;
 import com.example.userManagementService.models.doctor;
@@ -41,7 +42,6 @@ public class patientController {
             throw new patientNotFoundException("Patient with ID " + id + " not found");
         }
     }
-
     @GetMapping("/search/doctors")
     public ResponseEntity<List<doctorDTO>> searchDoctorsForPatient(@RequestParam(required = false) String name,
                                                                    @RequestParam(required = false) Integer experienceYears,
@@ -117,6 +117,26 @@ public class patientController {
         }
         else {
             return appointmentClient.getPatientAppointment(patientId, appointmentId);
+        }
+    }
+    @GetMapping("/{patientId}/scan-results/{scanId}")
+    ResponseEntity<scanResultDTO> getScanResultById(@PathVariable Long patientId, @PathVariable Long scanId){
+        patient patient = patientService.getPatientById(patientId);
+        if (patient == null) {
+            throw new patientNotFoundException("Patient with ID " + patientId + " not found");
+        }
+        else {
+            return appointmentClient.getScanResultById(patientId, scanId);
+        }
+    }
+    @GetMapping("/{patientId}/scan-results")
+    ResponseEntity<List<scanResultDTO>> getScanResultsForPatient(@PathVariable Long patientId){
+        patient patient = patientService.getPatientById(patientId);
+        if (patient == null) {
+            throw new patientNotFoundException("Patient with ID " + patientId + " not found");
+        }
+        else {
+            return appointmentClient.getScanResultsForPatient(patientId);
         }
     }
 

@@ -17,9 +17,8 @@ import java.io.Serializable;
 public class patient implements Serializable{
     @Id
     public Long id;
-    @Column(name = "medical_history")
     public String medicalHistory;
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.ALL,  orphanRemoval = true)
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private users user;
 }

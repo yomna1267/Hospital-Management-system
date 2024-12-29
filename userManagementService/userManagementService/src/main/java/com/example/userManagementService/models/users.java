@@ -1,15 +1,12 @@
 package com.example.userManagementService.models;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.GenericGenerator;
 
 import java.io.Serializable;
-import java.time.LocalDate;
-import java.util.List;
+
 
 @Entity
 @Table(name = "users")

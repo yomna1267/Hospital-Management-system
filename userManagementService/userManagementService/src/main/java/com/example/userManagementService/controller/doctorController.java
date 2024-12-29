@@ -2,19 +2,19 @@ package com.example.userManagementService.controller;
 
 import com.example.userManagementService.dto.appointmentDTO;
 import com.example.userManagementService.dto.patientDTO;
+import com.example.userManagementService.dto.scanResultDTO;
+import com.example.userManagementService.dto.workingHoursDTO;
 import com.example.userManagementService.exceptions.doctorNotFoundException;
 import com.example.userManagementService.exceptions.patientNotFoundException;
 import com.example.userManagementService.feign.appointmentClient;
 import com.example.userManagementService.models.doctor;
+import com.example.userManagementService.models.patient;
 import com.example.userManagementService.repository.patientRepository;
 import com.example.userManagementService.service.doctorService;
 import com.example.userManagementService.service.patientService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -27,7 +27,7 @@ public class doctorController {
     private final com.example.userManagementService.repository.patientRepository patientRepository;
 
 
-    public doctorController(doctorService doctorService, com.example.userManagementService.service.patientService patientService, com.example.userManagementService.feign.appointmentClient appointmentClient, patientRepository patientRepository) {
+    public doctorController(doctorService doctorService, patientService patientService, appointmentClient appointmentClient, patientRepository patientRepository) {
         this.doctorService = doctorService;
         this.patientService = patientService;
         this.appointmentClient = appointmentClient;
@@ -42,17 +42,6 @@ public class doctorController {
         } catch (patientNotFoundException ex) {
             throw new doctorNotFoundException("doctor with ID " + id + " not found");
         }
-    }
-    @GetMapping("/{doctorId}/search/{patientId}")
-    public patientDTO searchPatientById(@PathVariable Long doctorId, @PathVariable Long patientId) {
-        List<appointmentDTO> doctorAppointments = getDoctorAppointments(doctorId);
-        appointmentDTO patientAppointment = doctorAppointments
-                .stream()
-                .filter(appointment -> appointment.getPatientId().equals(patientId))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("Appointment not found for patient with ID: " + patientId));
-        patientDTO patient = patientService.mapToPatientDTO(patientAppointment);
-        return patient;
     }
 
     @GetMapping("/{doctorId}/appointments")
@@ -75,6 +64,46 @@ public class doctorController {
         else {
             return appointmentClient.getDoctorAppointment(doctorId, appointmentId);
         }
+    }
+
+    @GetMapping("/{doctorId}/search/{patientId}")
+    public patientDTO searchPatientById(@PathVariable Long doctorId, @PathVariable Long patientId) {
+        List<appointmentDTO> doctorAppointments = getDoctorAppointments(doctorId);
+        appointmentDTO patientAppointment = doctorAppointments
+                .stream()
+                .filter(appointment -> appointment.getPatientId().equals(patientId))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Appointment not found for patient with ID: " + patientId));
+        patientDTO patient = patientService.mapToPatientDTO(patientAppointment);
+        return patient;
+    }
+
+    @PostMapping("/{doctorId}/patient/{patientId}/scan-results")
+    public ResponseEntity<scanResultDTO> addScanResult(
+            @PathVariable Long doctorId,
+            @PathVariable Long patientId,
+            @RequestBody scanResultDTO scanResultDTO){
+        doctor doctor = doctorService.getDoctorById(doctorId);
+        patient patient = patientService.getPatientById(patientId);
+        if (doctor == null){
+            throw new doctorNotFoundException("Doctor with ID " + doctorId + " not found");
+        }
+        else if(patient == null){
+            throw new patientNotFoundException("Patient with ID " + patientId + " not found");
+        }
+        else{
+            return appointmentClient.addScanResult(doctorId, patientId, scanResultDTO);
+        }
+
+    }
+
+    @GetMapping("/{id}/availability")
+    public ResponseEntity<List<workingHoursDTO>> getAvailability(@PathVariable Long id){
+        doctor doctor = doctorService.getDoctorById(id);
+        if (doctor == null) {
+            throw new doctorNotFoundException("Doctor with ID " + id + " not found");
+        }
+        return doctorService.getAvailability(id);
     }
 
 }

@@ -23,13 +23,15 @@ public class adminService {
     private final patientRepository patientRepository;
     private final userRepository userRepository;
     private final roleRepository roleRepository;
+    private final workingHoursService workingHoursService;
 
     @Autowired
-    public adminService(doctorRepository doctorRepository, patientRepository patientRepository, userRepository userRepository, com.example.userManagementService.repository.roleRepository roleRepository) {
+    public adminService(doctorRepository doctorRepository, patientRepository patientRepository, userRepository userRepository, com.example.userManagementService.repository.roleRepository roleRepository, com.example.userManagementService.service.workingHoursService workingHoursService) {
         this.doctorRepository = doctorRepository;
         this.patientRepository = patientRepository;
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
+        this.workingHoursService = workingHoursService;
     }
 
     //ADMIN
@@ -44,16 +46,20 @@ public class adminService {
 
     @Transactional
     public users updateAdmin(users updatedUser) {
-        users existingUser = userRepository.findById(updatedUser.getId()).orElse(null);
+        users existingUser = userRepository.findById(updatedUser.getId()).orElseThrow(() ->new userNotFoundException("user with id " + updatedUser.getId() + " not found"));
         if (existingUser != null) {
             existingUser.setFirstName(updatedUser.getFirstName());
             existingUser.setLastName(updatedUser.getLastName());
-            existingUser.setEmail(updatedUser.getEmail());
             existingUser.setPhone(updatedUser.getPhone());
             existingUser.setAddress(updatedUser.getAddress());
             existingUser.setAge(updatedUser.getAge());
             existingUser.setGender(updatedUser.getGender());
-
+            if (!existingUser.getEmail().equals(updatedUser.getEmail())) {
+                if (userRepository.existsByEmail(updatedUser.getEmail())) {
+                    throw new RuntimeException("Email already exists");
+                }
+                existingUser.setEmail(updatedUser.getEmail());
+            }
             return userRepository.save(existingUser);
         }
         return null;
@@ -125,7 +131,7 @@ public class adminService {
 
         existingDoctor.setSpecialty(updatedDoctor.getSpecialty());
         existingDoctor.setExperienceYears(updatedDoctor.getExperienceYears());
-
+        workingHoursService.updateWorkingHours(existingDoctor, updatedDoctor.getWorkingHours());
         return doctorRepository.save(existingDoctor);
     }
 

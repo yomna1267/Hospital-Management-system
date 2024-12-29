@@ -20,7 +20,7 @@ public class globalExceptionHandler {
 
 
     @ExceptionHandler(userNotFoundException.class)
-    public ResponseEntity<?> handleAdminNotFoundException(userNotFoundException ex) {
+    public ResponseEntity<?> handleUserNotFoundException(userNotFoundException ex) {
         return new ResponseEntity<>(new ErrorResponse("Error", ex.getMessage()), HttpStatus.NOT_FOUND);
     }
 
