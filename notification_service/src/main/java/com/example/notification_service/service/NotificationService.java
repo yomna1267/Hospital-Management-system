@@ -47,7 +47,7 @@ public class NotificationService {
             Long doctorId = appointmentMessage.getDoctorId();
             String doctorEmail = null;
             try {
-                String url = "http://USER-MANAGEMENT-SERVICE/api/admin/" + doctorId;
+                String url = "http://user-management-service/api/admin/id/" + doctorId;
                 ResponseEntity<User> response = restTemplate.exchange(url, HttpMethod.GET, null, User.class);
                 doctorEmail = response.getBody().getEmail();
                 //System.out.println(response.getBody().getEmail());
