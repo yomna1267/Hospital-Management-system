@@ -60,6 +60,10 @@ public class appointmentServ {
 
     @Transactional
     public appointment createAppointment(appointment newAppointment) {
+        // Validate that the appointment date is not in the past
+        if (newAppointment.getAppointmentDate().isBefore(LocalDateTime.now())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Appointment date cannot be in the past");
+        }
         // Check doctor's availability
         if (!isWithinDoctorAvailability(newAppointment.getDoctorId(), newAppointment.getAppointmentDate())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Appointment falls outside of doctor's availability.");
@@ -116,6 +120,14 @@ public class appointmentServ {
         appointment existingAppointment = repository.findById(appointmentId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Appointment not found."));
 
+        // trying to reschedule a cancelled appointment
+        if (existingAppointment.getStatus().equals(appointmentStatus.CANCELLED)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "This appointment slot is already cancelled.");
+        }
+        // Validate that the new date is not in the past
+        if (newDate.isBefore(LocalDateTime.now())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "New appointment date cannot be in the past");
+        }
         // a patient cannot update another patient's appointment
         if (!existingAppointment.getPatientId().equals(patientId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You cannot update another patient's appointment.");
@@ -124,10 +136,7 @@ public class appointmentServ {
         if (!isWithinDoctorAvailability(existingAppointment.getDoctorId(), newDate)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "New appointment falls outside of doctor's availability.");
         }
-        // trying to reschedule a cancelled appointment
-        if (existingAppointment.getStatus().equals(appointmentStatus.CANCELLED)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "This appointment slot is already cancelled.");
-        }
+
 
         // conflict on the same appointment slot
         Optional<appointment> conflict = repository.findByDoctorIdAndAppointmentDate(existingAppointment.getDoctorId(), newDate);
@@ -178,7 +187,6 @@ public class appointmentServ {
         }
         return savedappointment;
     }
-
 
 
     public appointment deleteAppointment(Long appointmentId, Long patientId) {
