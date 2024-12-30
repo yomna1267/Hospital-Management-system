@@ -1,5 +1,6 @@
 package com.example.userManagementService.service;
 
+import com.example.userManagementService.dto.workingHoursDTO;
 import com.example.userManagementService.models.doctor;
 import com.example.userManagementService.models.workingHours;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +13,14 @@ import java.util.List;
 public class workingHoursService {
     @Autowired
     private workingHoursRepository workingHoursRepository;
+
+    public workingHoursDTO mapToWorkingHoursDTO(workingHours workingHours) {
+        return new workingHoursDTO(
+                workingHours.getDay(),
+                workingHours.getStartTime(),
+                workingHours.getEndTime()
+        );
+    }
 
     public List<workingHours> updateWorkingHours(doctor existingDoctor, List<workingHours> updatedWorkingHours) {
 

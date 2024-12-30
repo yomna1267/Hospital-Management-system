@@ -8,38 +8,26 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class globalExceptionHandler {
 
+    @ExceptionHandler(appointmentNotFoundException.class)
+    public ResponseEntity<?> handleAppointmentNotFound(appointmentNotFoundException ex) {
+        return new ResponseEntity<>(new errorResponse("Appointment Not Found", ex.getMessage(), HttpStatus.NOT_FOUND.value()), HttpStatus.NOT_FOUND);
+    }
+
     @ExceptionHandler(patientNotFoundException.class)
     public ResponseEntity<?> handlePatientNotFoundException(patientNotFoundException ex) {
-        return new ResponseEntity<>(new ErrorResponse("Error", ex.getMessage()), HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(new errorResponse("Patient Not Found", ex.getMessage(), HttpStatus.NOT_FOUND.value()), HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(doctorNotFoundException.class)
     public ResponseEntity<?> handleDoctorNotFoundException(doctorNotFoundException ex) {
-        return new ResponseEntity<>(new ErrorResponse("Error", ex.getMessage()), HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(new errorResponse("Doctor Not Found", ex.getMessage(), HttpStatus.NOT_FOUND.value()), HttpStatus.NOT_FOUND);
     }
 
 
     @ExceptionHandler(userNotFoundException.class)
     public ResponseEntity<?> handleUserNotFoundException(userNotFoundException ex) {
-        return new ResponseEntity<>(new ErrorResponse("Error", ex.getMessage()), HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(new errorResponse("User Not Found", ex.getMessage(), HttpStatus.NOT_FOUND.value()), HttpStatus.NOT_FOUND);
     }
 
-    public static class ErrorResponse {
-        private String error;
-        private String message;
-
-        public ErrorResponse(String error, String message) {
-            this.error = error;
-            this.message = message;
-        }
-
-        public String getError() {
-            return error;
-        }
-
-        public String getMessage() {
-            return message;
-        }
-    }
 
 }

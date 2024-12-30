@@ -1,6 +1,9 @@
 package com.example.userManagementService.controller;
 
+import com.example.userManagementService.exceptions.patientNotFoundException;
 import com.example.userManagementService.exceptions.userNotFoundException;
+import com.example.userManagementService.exceptions.doctorNotFoundException;
+
 import com.example.userManagementService.models.doctor;
 import com.example.userManagementService.models.patient;
 import com.example.userManagementService.models.users;
@@ -35,7 +38,6 @@ public class adminController {
     @PutMapping("/{id}")
     public ResponseEntity<Map<String, String>> updateAdmin(@PathVariable("id") Long id, @RequestBody users updatedUser) {
         try {
-            updatedUser.setId(id);
             users updated = adminService.updateAdmin(updatedUser);
             Map<String, String> response = new HashMap<>();
             response.put("username", updated.getUsername());
@@ -89,22 +91,26 @@ public class adminController {
         response.put("username", createdDoctor.getUser().getUsername());
         response.put("password", createdDoctor.getUser().getPassword());
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PutMapping("/doctor/{id}")
     public ResponseEntity<Map<String, String>> updateDoctor(@PathVariable("id") Long doctorId, @RequestBody doctor updatedDoctor) {
-        doctor doctor = adminService.updateDoctor(doctorId, updatedDoctor);
+       try {
+           doctor doctor = adminService.updateDoctor(doctorId, updatedDoctor);
+           Map<String, String> response = new HashMap<>();
+           response.put("username", doctor.getUser().getUsername());
+           response.put("password", doctor.getUser().getPassword());
 
-        if (doctor != null) {
-            Map<String, String> response = new HashMap<>();
-            response.put("username", doctor.getUser().getUsername());
-            response.put("password", doctor.getUser().getPassword());
+           return ResponseEntity.status(HttpStatus.OK).body(response);
+       }
+       catch(doctorNotFoundException e) {
+           Map<String, String> errorResponse = new HashMap<>();
+           errorResponse.put("error", "Doctor not found");
+           errorResponse.put("message", e.getMessage());
 
-            return ResponseEntity.ok(response);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+           return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+       }
     }
 
     @DeleteMapping("/doctor/{id}")
@@ -133,21 +139,23 @@ public class adminController {
         response.put("username", createdPatient.getUser().getUsername());
         response.put("password", createdPatient.getUser().getPassword());
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PutMapping("/patient/{id}")
     public ResponseEntity<Map<String, String>> updatePatient(@PathVariable("id") Long id, @RequestBody patient updatedPatient) {
-        patient updated = adminService.updatePatient(id, updatedPatient);
-
-        if (updated != null) {
+        try{
+            patient updated = adminService.updatePatient(id, updatedPatient);
             Map<String, String> response = new HashMap<>();
             response.put("username", updated.getUser().getUsername());
             response.put("password", updated.getUser().getPassword());
-
-            return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        }
+        catch (patientNotFoundException e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Patient not found");
+            errorResponse.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
         }
     }
 

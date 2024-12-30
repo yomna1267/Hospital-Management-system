@@ -1,5 +1,6 @@
 package com.example.userManagementService.feign;
 
+import com.example.userManagementService.config.feignConfig;
 import com.example.userManagementService.dto.appointmentDTO;
 import com.example.userManagementService.dto.scanResultDTO;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -9,7 +10,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@FeignClient(name = "appointment-service", url = "http://localhost:8081", configuration = feignConfig.class)
+@FeignClient(name = "appointment-service",
+        url = "http://localhost:8081",
+        configuration = feignConfig.class)
 public interface appointmentClient {
     @PostMapping("/api/patients/{patientId}/appointments")
     appointmentDTO createAppointment(@PathVariable Long patientId, @RequestBody appointmentDTO appointment);
