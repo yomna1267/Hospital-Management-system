@@ -6,47 +6,55 @@ import com.example.userManagementService.exceptions.doctorNotFoundException;
 import com.example.userManagementService.models.doctor;
 import com.example.userManagementService.models.patient;
 import com.example.userManagementService.models.role;
-import com.example.userManagementService.models.users;
+import com.example.userManagementService.models.Users;
 import com.example.userManagementService.repository.doctorRepository;
-import com.example.userManagementService.repository.userRepository;
+import com.example.userManagementService.repository.UserRepository;
 import com.example.userManagementService.repository.patientRepository;
 import com.example.userManagementService.repository.roleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.List;
-import java.util.Optional;
+
+import java.util.*;
 
 @Service
 public class adminService {
     private final doctorRepository doctorRepository;
     private final patientRepository patientRepository;
-    private final userRepository userRepository;
+    private final UserRepository userRepository;
     private final roleRepository roleRepository;
     private final workingHoursService workingHoursService;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public adminService(doctorRepository doctorRepository, patientRepository patientRepository, userRepository userRepository, com.example.userManagementService.repository.roleRepository roleRepository, com.example.userManagementService.service.workingHoursService workingHoursService) {
+    public adminService(doctorRepository doctorRepository, patientRepository patientRepository, UserRepository userRepository, com.example.userManagementService.repository.roleRepository roleRepository, com.example.userManagementService.service.workingHoursService workingHoursService, PasswordEncoder passwordEncoder) {
         this.doctorRepository = doctorRepository;
         this.patientRepository = patientRepository;
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.workingHoursService = workingHoursService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     //ADMIN
     @Transactional
-    public users addAdmin(users newUser){
+    public Map<String,String> addAdmin(Users newUser){
         role adminRole = (role) roleRepository.findByname("ADMIN")
                 .orElseThrow(() -> new RuntimeException("Role 'Admin' not found"));
         newUser.setRole(adminRole);
-        users savedUser = userRepository.save(newUser);
-        return savedUser;
+        String password = UUID.randomUUID().toString();
+        newUser.setPassword(passwordEncoder.encode(password));
+        Users savedUser = userRepository.save(newUser);
+        Map<String, String> response = new HashMap<>();
+        response.put("username", String.valueOf(newUser.getUsername()));
+        response.put("password", password);
+        return response;
     }
 
     @Transactional
-    public users updateAdmin(users updatedUser) {
-        users existingUser = userRepository.findById(updatedUser.getId()).orElseThrow(() ->new userNotFoundException("user with id " + updatedUser.getId() + " not found"));
+    public Users updateAdmin(Users updatedUser) {
+        Users existingUser = userRepository.findById(updatedUser.getId()).orElseThrow(() ->new userNotFoundException("user with id " + updatedUser.getId() + " not found"));
         if (existingUser != null) {
             existingUser.setFirstName(updatedUser.getFirstName());
             existingUser.setLastName(updatedUser.getLastName());
@@ -60,14 +68,14 @@ public class adminService {
                 }
                 existingUser.setEmail(updatedUser.getEmail());
             }
-            return userRepository.save(existingUser);
+             userRepository.save(existingUser);
         }
         return null;
     }
 
     @Transactional
-    public users getUserById(long id) {
-        Optional<users> user= userRepository.findById(id);
+    public Users getUserById(long id) {
+        Optional<Users> user= userRepository.findById(id);
         if (user.isPresent()) {
             return user.get();
         }
@@ -78,32 +86,37 @@ public class adminService {
     }
 
     @Transactional
-    public void deleteAdmin(users adminToDelete) {
+    public void deleteAdmin(Users adminToDelete) {
         userRepository.delete(adminToDelete);
     }
 
     @Transactional
-    public List<users> getAllAdmins() {
+    public List<Users> getAllAdmins() {
         return userRepository.findByRoleName("ADMIN");
     }
 
     @Transactional
-    public List<users> getAllUsers(){
+    public List<Users> getAllUsers(){
         return userRepository.findAll();
     }
 
 
     //DOCTOR
     @Transactional
-    public doctor addDoctor(doctor newDoctor) {
+    public Map<String,String> addDoctor(doctor newDoctor) {
         role doctorRole = (role) roleRepository.findByname("DOCTOR")
                 .orElseThrow(() -> new RuntimeException("Role 'Doctor' not found"));
         newDoctor.getUser().setRole(doctorRole);
-        users savedUser = userRepository.save(newDoctor.getUser());
+        String password = UUID.randomUUID().toString();
+        newDoctor.getUser().setPassword(passwordEncoder.encode(password));
+        Map<String,String> response = new HashMap<>();
+        response.put("username", newDoctor.getUser().getUsername());
+        response.put("password", password);
+        Users savedUser = userRepository.save(newDoctor.getUser());
         newDoctor.setUser(savedUser);
         newDoctor.setId(savedUser.getId());
         doctor savedDoctor= doctorRepository.save(newDoctor);
-        return savedDoctor;
+        return response;
     }
 
     @Transactional
@@ -111,8 +124,8 @@ public class adminService {
         doctor existingDoctor = doctorRepository.findById(doctorId)
                 .orElseThrow(() -> new doctorNotFoundException("Doctor with ID " + doctorId + " not found"));
 
-        users existingUser = existingDoctor.getUser();
-        users updatedUser = updatedDoctor.getUser();
+        Users existingUser = existingDoctor.getUser();
+        Users updatedUser = updatedDoctor.getUser();
 
         existingUser.setFirstName(updatedUser.getFirstName());
         existingUser.setLastName(updatedUser.getLastName());
@@ -159,15 +172,23 @@ public class adminService {
 
     //PATIENT
     @Transactional
-    public patient addPatient(patient newPatient) {
+    public Map<String,String> addPatient(patient newPatient) {
         role patientRole = (role) roleRepository.findByname("PATIENT")
                 .orElseThrow(() -> new RuntimeException("Role 'Patient' not found"));
+
         newPatient.getUser().setRole(patientRole);
-        users savedUser = userRepository.save(newPatient.getUser());
+        String password = UUID.randomUUID().toString();
+        newPatient.getUser().setPassword(passwordEncoder.encode(password));
+
+        Users savedUser = userRepository.save(newPatient.getUser());
         newPatient.setUser(savedUser);
         newPatient.setId(savedUser.getId());
         patient savedPatient = patientRepository.save(newPatient);
-        return savedPatient;
+
+        Map<String, String> response = new HashMap<>();
+        response.put("username", newPatient.getUser().getUsername());
+        response.put("password", password);
+        return response;
     }
 
     @Transactional
@@ -175,8 +196,8 @@ public class adminService {
         patient existingPatient = patientRepository.findById(id)
                 .orElseThrow(() -> new patientNotFoundException("Patient with ID " + id + " not found"));
 
-        users existingUser = existingPatient.getUser();
-        users updatedUser = updatedPatient.getUser();
+        Users existingUser = existingPatient.getUser();
+        Users updatedUser = updatedPatient.getUser();
 
         existingUser.setFirstName(updatedUser.getFirstName());
         existingUser.setLastName(updatedUser.getLastName());
@@ -219,8 +240,8 @@ public class adminService {
         }
     }
     @Transactional
-    public users getUserByUsername(String userName) {
-        Optional<users> user= userRepository.findByUsername(userName);
+    public Users getUserByUsername(String userName) {
+        Optional<Users> user= userRepository.findByUsername(userName);
         if (user.isPresent()) {
             return user.get();
         }

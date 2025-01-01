@@ -1,6 +1,5 @@
 package com.example.userManagementService.models;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,5 +19,5 @@ public class patient implements Serializable{
     public String medicalHistory;
     @OneToOne(cascade = CascadeType.ALL,  orphanRemoval = true)
     @JoinColumn(name = "user_id", referencedColumnName = "id")
-    private users user;
+    private Users user;
 }
