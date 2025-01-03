@@ -71,7 +71,7 @@ public class PatientStatusService {
 
     }
 
-    @RabbitListener(queues = "statusQueue")
+    //@RabbitListener(queues = "statusQueue")
     public void listen(String message)
     {
         try {
