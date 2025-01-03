@@ -45,6 +45,9 @@ public class adminService {
         newUser.setRole(adminRole);
         String password = UUID.randomUUID().toString();
         newUser.setPassword(passwordEncoder.encode(password));
+        System.out.println(passwordEncoder.encode(password));
+        System.out.println(password);
+        //newUser.setPassword(password);
         Users savedUser = userRepository.save(newUser);
         Map<String, String> response = new HashMap<>();
         response.put("username", String.valueOf(newUser.getUsername()));

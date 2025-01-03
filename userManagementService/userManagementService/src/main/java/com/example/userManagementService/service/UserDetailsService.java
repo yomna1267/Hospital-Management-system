@@ -21,7 +21,7 @@ public class UserDetailsService implements org.springframework.security.core.use
 
         return User.builder()
                 .username(user.getUsername())
-                .password(user.getPassword()) // Password must be encoded
+                .password(user.getPassword())
                 .authorities("ROLE_"+user.getRole().getName())
                 .build();
     }

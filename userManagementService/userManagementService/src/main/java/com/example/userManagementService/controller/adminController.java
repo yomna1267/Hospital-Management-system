@@ -7,6 +7,7 @@ import com.example.userManagementService.models.Users;
 import com.example.userManagementService.service.adminService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,6 +17,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping ("/api/admin")
+@Secured("ROLE_ADMIN")
 public class adminController {
     private final adminService adminService;
     private final PasswordEncoder passwordEncoder;
