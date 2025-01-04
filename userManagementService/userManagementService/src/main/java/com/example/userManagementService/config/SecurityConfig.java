@@ -27,7 +27,6 @@ public class SecurityConfig {
                          .requestMatchers("/api/patient/**").hasRole("PATIENT")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/doctor/**").hasRole("DOCTOR")
-                       // .requestMatchers("/api/admin/").permitAll()
                         .requestMatchers("api/users/**").permitAll()
                         .anyRequest().authenticated()
                 )
@@ -40,7 +39,7 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
     @Bean
-    public PasswordEncoder passwordEncoder() {
+    public PasswordEncoder encoder() {
         return new BCryptPasswordEncoder();
     }
 }

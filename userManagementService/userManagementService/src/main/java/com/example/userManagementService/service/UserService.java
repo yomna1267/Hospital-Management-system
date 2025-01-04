@@ -1,63 +1,59 @@
 package com.example.userManagementService.service;
 
+import com.example.userManagementService.exceptions.IncorrectPasswordException;
+import com.example.userManagementService.exceptions.UserNotFoundException;
 import com.example.userManagementService.models.ChangePasswordRequest;
-import com.example.userManagementService.models.users;
+import com.example.userManagementService.models.Users;
+import com.example.userManagementService.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 
-import java.security.Principal;
 import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
     private final PasswordEncoder passwordEncoder;
-    private final com.example.userManagementService.repository.userRepository userRepository;
+    private final UserRepository userRepository;
     private final EmailService emailService;
     private final RedisService redisService;
 
-    public void changePassword(ChangePasswordRequest changePasswordRequest
-                               ,Principal principal)
+    public void changePassword(String username,ChangePasswordRequest changePasswordRequest)
     {
-        String username = principal.getName();
-        users connectedUser = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
-        System.out.println(connectedUser.getPassword());
-        System.out.println(passwordEncoder.encode(changePasswordRequest.getCurrentPassword()));
-        System.out.println(changePasswordRequest.getConfirmPassword());
-        System.out.println(changePasswordRequest.getCurrentPassword());
+        Users connectedUser = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("User with username: " + username + "is not found"));
 
         if(!passwordEncoder.matches(changePasswordRequest.getCurrentPassword(),connectedUser.getPassword()))
-            throw new IllegalStateException("wrong password");
+            throw new IncorrectPasswordException("Password is incorrect for user : "+username);
 
         if(!changePasswordRequest.getNewPassword().equals(changePasswordRequest.getConfirmPassword()))
-                 throw new IllegalStateException("No Matching");
+            throw new IncorrectPasswordException("No Matching between new password and its confirmation");
 
         connectedUser.setPassword(passwordEncoder.encode(changePasswordRequest.getNewPassword()));
         userRepository.save(connectedUser);
     }
 
-    public Optional<users> forgetPassword(String username) {
-       Optional<users> user = userRepository.findByUsername(username);
-        if (!user.isPresent()) {
-            throw new RuntimeException("User not found");
-        }
-       String userEmail = user.get().getEmail();
-        emailService.sendForgetPasswordCode(userEmail);
-        return user;
+    public Users forgetPassword(String username) {
+        Users connectedUser = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("User with username: " + username + "is not found"));
+        String userEmail = connectedUser.getEmail();
+        String value = emailService.sendForgetPasswordCode(userEmail);
+        redisService.redisSaveForgetPasswordCode(username,value);
+        return connectedUser;
     }
 
     public void resetPassword(String username,String code , String newPassword){
-        redisService.redisSaveForgetPasswordCode(username);
-        Optional<users> user = forgetPassword(username);
+        Optional<Users> user = userRepository.findByUsername(username);
         Jedis jedis = new Jedis("localhost",6379);
-        System.out.println(jedis.get(username));
-        if(code.equals(jedis.get(username)) && jedis.ttl(username)>=0)
+
+        if(passwordEncoder.encode(code).equals(jedis.get(username))
+                && jedis.ttl(username)>=0)
+        {
             user.get().setPassword(passwordEncoder.encode(newPassword));
+            userRepository.save(user.get());
+        }
     }
 
 }

@@ -1,13 +1,11 @@
 package com.example.userManagementService.controller;
 
 import com.example.userManagementService.models.ChangePasswordRequest;
-import com.example.userManagementService.models.ForgetPasswordRequest;
 import com.example.userManagementService.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal;
 
 @RestController
 @RequestMapping("/api/users")
@@ -15,23 +13,32 @@ import java.security.Principal;
 public class UsersController {
 
     private final UserService userService;
-    @PutMapping("/change-password")
-    public void changePassword(@RequestBody ChangePasswordRequest changePasswordRequest,
-                               Principal connectedUser){
-        userService.changePassword(changePasswordRequest,connectedUser);
+
+    @PutMapping("/change-password/{username}")
+    public ResponseEntity<?> changePassword(@PathVariable String username,
+                               @RequestBody ChangePasswordRequest changePasswordRequest)
+    {
+        userService.changePassword(username, changePasswordRequest);
+        return ResponseEntity.noContent().build();
     }
 
+
     @PostMapping("/forget-password/{username}")
-    public ResponseEntity<Void> forgetPassword(@PathVariable String username){
+    public ResponseEntity<?> forgetPassword(@PathVariable String username)
+    {
         userService.forgetPassword(username);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/reset-password")
-    public ResponseEntity<Void> resetPassword(@RequestParam String username,
+    public ResponseEntity<?> resetPassword(@RequestParam String username,
                                                 @RequestParam String code,
                                                 @RequestParam String newPassword){
-        userService.resetPassword(username,code,newPassword);
-        return ResponseEntity.ok().build();
+
+            userService.resetPassword(username,code,newPassword);
+            return ResponseEntity.noContent().build();
+
     }
+
+
 }
