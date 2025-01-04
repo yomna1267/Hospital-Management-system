@@ -1,6 +1,6 @@
 package com.example.userManagementService.controller;
 
-import com.example.userManagementService.exceptions.userNotFoundException;
+import com.example.userManagementService.exceptions.UserNotFoundException;
 import com.example.userManagementService.models.doctor;
 import com.example.userManagementService.models.patient;
 import com.example.userManagementService.models.Users;
@@ -27,18 +27,13 @@ public class adminController {
         this.passwordEncoder = passwordEncoder;
     }
 
-    //Done
+
     @PostMapping("/")
     public ResponseEntity<Map<String, String>> addAdmin(@RequestBody Users user) {
-
-//        Map<String, String> response = new HashMap<>();
-//        response.put("username", createdUser.getUsername());
-//        response.put("password", createdUser.getPassword());
-
         return ResponseEntity.status(HttpStatus.CREATED).body(adminService.addAdmin(user));
     }
 
-    //Done
+
     @PutMapping("/{id}")
     public ResponseEntity<Map<String, String>> updateAdmin(@PathVariable("id") Long id, @RequestBody Users updatedUser) {
         try {
@@ -48,7 +43,7 @@ public class adminController {
             response.put("password", updated.getPassword());
 
             return ResponseEntity.status(HttpStatus.OK).body(response);
-        } catch (userNotFoundException e) {
+        } catch (UserNotFoundException e) {
             Map<String, String> errorResponse = new HashMap<>();
             errorResponse.put("error", "Admin not found");
             errorResponse.put("message", e.getMessage());
@@ -57,7 +52,7 @@ public class adminController {
         }
     }
 
-    //Done
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteAdmin(@PathVariable long id) {
         Users adminToDelete = adminService.getUserById(id);
@@ -65,42 +60,32 @@ public class adminController {
         return ResponseEntity.noContent().build();
     }
 
-    //Done
     @GetMapping("/admins")
     public ResponseEntity<List<Users>> getAllAdmins() {
         List<Users> admins = adminService.getAllAdmins();
-        //System.out.println("Token received: " + token);
         return ResponseEntity.ok(admins);
     }
-    //Done
+
     @GetMapping("/id/{id}")
     public ResponseEntity<Users> getUserById(@PathVariable long id) {
         Users user = adminService.getUserById(id);
         return ResponseEntity.ok(user);
     }
 
-    //Done
     @GetMapping("/")
     public ResponseEntity<List<Users>> getAllUsers() {
         List<Users> users = adminService.getAllUsers();
         return ResponseEntity.ok(users);
     }
-    //Done
+
     @GetMapping("/username/{userName}")
     public ResponseEntity<Users> getUserByUsername(@PathVariable String userName){
         Users user = adminService.getUserByUsername(userName);
         return ResponseEntity.ok(user);
     }
 
-    //Done
     @PostMapping("/doctor")
     public ResponseEntity<Map<String, String>> addDoctor(@RequestBody doctor newDoctor) {
-//        doctor createdDoctor = adminService.addDoctor(newDoctor);
-//        Map<String, String> response = new HashMap<>();
-//        response.put("username", createdDoctor.getUser().getUsername());
-//        response.put("password", createdDoctor.getUser().getPassword());
-
-        //return ResponseEntity.ok(response);
         return ResponseEntity.ok(adminService.addDoctor(newDoctor));
     }
 
@@ -119,7 +104,6 @@ public class adminController {
         }
     }
 
-    //Done
     @DeleteMapping("/doctor/{id}")
     public ResponseEntity<Void> deleteDoctor(@PathVariable long id) {
         doctor doctorToDelete = adminService.getDoctorById(id);
@@ -127,7 +111,6 @@ public class adminController {
         return ResponseEntity.noContent().build();
     }
 
-    //done
     @GetMapping("/doctor")
     public ResponseEntity<List<doctor>> getAllDoctors() {
         List<doctor> doctors = adminService.getAllDoctor();
@@ -140,14 +123,8 @@ public class adminController {
         return ResponseEntity.ok(doctor);
     }
 
-    //Done
     @PostMapping("/patient")
     public ResponseEntity<Map<String, String>> addPatient(@RequestBody patient newPatient) {
-        //patient createdPatient = adminService.addPatient(newPatient);
-//        Map<String, String> response = new HashMap<>();
-//        response.put("username", createdPatient.getUser().getUsername());
-//        response.put("password", createdPatient.getUser().getPassword());
-//
         return ResponseEntity.ok(adminService.addPatient(newPatient));
     }
 
@@ -184,6 +161,4 @@ public class adminController {
         patient patient = adminService.getPatientById(id);
         return ResponseEntity.ok(patient);
     }
-
-
 }

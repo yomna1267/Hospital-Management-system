@@ -1,6 +1,6 @@
 package com.example.userManagementService.service;
 
-import com.example.userManagementService.exceptions.userNotFoundException;
+import com.example.userManagementService.exceptions.UserNotFoundException;
 import com.example.userManagementService.exceptions.patientNotFoundException;
 import com.example.userManagementService.exceptions.doctorNotFoundException;
 import com.example.userManagementService.models.doctor;
@@ -57,7 +57,7 @@ public class adminService {
 
     @Transactional
     public Users updateAdmin(Users updatedUser) {
-        Users existingUser = userRepository.findById(updatedUser.getId()).orElseThrow(() ->new userNotFoundException("user with id " + updatedUser.getId() + " not found"));
+        Users existingUser = userRepository.findById(updatedUser.getId()).orElseThrow(() ->new UserNotFoundException("user with id " + updatedUser.getId() + " not found"));
         if (existingUser != null) {
             existingUser.setFirstName(updatedUser.getFirstName());
             existingUser.setLastName(updatedUser.getLastName());
@@ -83,7 +83,7 @@ public class adminService {
             return user.get();
         }
         else{
-            throw new userNotFoundException("user with ID " + id + " not found");
+            throw new UserNotFoundException("user with ID " + id + " not found");
         }
 
     }
@@ -249,7 +249,7 @@ public class adminService {
             return user.get();
         }
         else{
-            throw new userNotFoundException("user with username " + userName + " not found");
+            throw new UserNotFoundException("user with username " + userName + " not found");
         }
     }
 }
