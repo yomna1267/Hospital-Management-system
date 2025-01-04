@@ -44,13 +44,8 @@ public class doctorService {
     }
     @Transactional
     public doctor getDoctorById(long id) {
-        Optional<doctor> doctor = doctorRepository.findById(id);
-        if (doctor.isPresent()) {
-            return doctor.get();
-        } else {
-            System.err.println("doctor with ID " + id + " not found");
-            throw new doctorNotFoundException("doctor with ID " + id + " not found");
-        }
+        return doctorRepository.findById(id)
+                .orElseThrow(() -> new doctorNotFoundException("Doctor with ID " + id + " not found"));
     }
     @Transactional
     public List<doctor> searchDoctorsForPatients(String name, Integer experienceYears, String specialty) {

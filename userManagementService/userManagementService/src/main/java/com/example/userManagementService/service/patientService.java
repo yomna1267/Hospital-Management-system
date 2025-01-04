@@ -13,7 +13,7 @@ import java.util.Optional;
 
 @Service
 public class patientService {
-    private final com.example.userManagementService.repository.patientRepository patientRepository;
+    private final patientRepository patientRepository;
     @Autowired
     public patientService(patientRepository patientRepository) {
         this.patientRepository = patientRepository;
@@ -35,12 +35,7 @@ public class patientService {
     }
 
     public patient getPatientById(Long id) {
-        Optional<patient> patientOpt = patientRepository.findById(id);
-        if (patientOpt.isPresent()) {
-            return patientOpt.get();
-        } else {
-            System.err.println("Patient with ID " + id + " not found");
-            throw new patientNotFoundException("Patient with ID " + id + " not found");
-        }
+        return patientRepository.findById(id)
+                .orElseThrow(() -> new patientNotFoundException("Patient with ID " + id + " not found"));
     }
 }

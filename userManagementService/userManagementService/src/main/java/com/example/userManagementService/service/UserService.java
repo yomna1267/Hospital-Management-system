@@ -1,10 +1,8 @@
 package com.example.userManagementService.service;
 
 import com.example.userManagementService.models.ChangePasswordRequest;
-import com.example.userManagementService.models.Users;
-import com.example.userManagementService.repository.UserRepository;
+import com.example.userManagementService.models.users;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -17,7 +15,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class UserService {
     private final PasswordEncoder passwordEncoder;
-    private final UserRepository userRepository;
+    private final com.example.userManagementService.repository.userRepository userRepository;
     private final EmailService emailService;
     private final RedisService redisService;
 
@@ -25,7 +23,7 @@ public class UserService {
                                ,Principal principal)
     {
         String username = principal.getName();
-        Users connectedUser = userRepository.findByUsername(username)
+        users connectedUser = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         System.out.println(connectedUser.getPassword());
@@ -43,8 +41,8 @@ public class UserService {
         userRepository.save(connectedUser);
     }
 
-    public Optional<Users> forgetPassword(String username) {
-       Optional<Users> user = userRepository.findByUsername(username);
+    public Optional<users> forgetPassword(String username) {
+       Optional<users> user = userRepository.findByUsername(username);
         if (!user.isPresent()) {
             throw new RuntimeException("User not found");
         }
@@ -55,7 +53,7 @@ public class UserService {
 
     public void resetPassword(String username,String code , String newPassword){
         redisService.redisSaveForgetPasswordCode(username);
-        Optional<Users> user = forgetPassword(username);
+        Optional<users> user = forgetPassword(username);
         Jedis jedis = new Jedis("localhost",6379);
         System.out.println(jedis.get(username));
         if(code.equals(jedis.get(username)) && jedis.ttl(username)>=0)

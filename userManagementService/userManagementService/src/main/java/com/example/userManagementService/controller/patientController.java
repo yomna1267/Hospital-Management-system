@@ -35,13 +35,10 @@ public class patientController {
 
     @GetMapping("/{id}")
     public ResponseEntity<patient> getPatientById(@PathVariable Long id) {
-        try {
-            patient patient = patientService.getPatientById(id);
-            return new ResponseEntity<>(patient, HttpStatus.OK);
-        } catch (patientNotFoundException ex) {
-            throw new patientNotFoundException("Patient with ID " + id + " not found");
-        }
+        patient patient = patientService.getPatientById(id);
+        return new ResponseEntity<>(patient, HttpStatus.OK);
     }
+
     @GetMapping("/search/doctors")
     public ResponseEntity<List<doctorDTO>> searchDoctorsForPatient(@RequestParam(required = false) String name,
                                                                    @RequestParam(required = false) Integer experienceYears,
@@ -62,15 +59,7 @@ public class patientController {
     public appointmentDTO bookAppointment(@PathVariable Long patientId, @RequestBody appointmentDTO newAppointment) {
         patient patient = patientService.getPatientById(patientId);
         doctor doctor = doctorService.getDoctorById(newAppointment.getDoctorId());
-        if (patient == null) {
-            throw new patientNotFoundException("Patient with ID " + patientId + " not found");
-        }
-        else if (doctor == null) {
-            throw new doctorNotFoundException("Doctor with ID " + doctor.getId() + " not found");
-        }
-        else{
-            return appointmentClient.createAppointment(patientId, newAppointment);
-        }
+        return appointmentClient.createAppointment(patientId, newAppointment);
     }
 
     @PutMapping("/{patientId}/appointments/{appointmentId}")
@@ -78,12 +67,7 @@ public class patientController {
                                                 @PathVariable Long appointmentId,
                                                 @RequestBody CharSequence newDate) {
         patient patient = patientService.getPatientById(patientId);
-        if (patient == null) {
-            throw new patientNotFoundException("Patient with ID " + patientId + " not found");
-        }
-        else {
-            return appointmentClient.updateAppointment(patientId, appointmentId, "\"" + newDate + "\"");
-        }
+        return appointmentClient.updateAppointment(patientId, appointmentId, "\"" + newDate + "\"");
     }
 
 
@@ -101,43 +85,23 @@ public class patientController {
     @GetMapping("/{patientId}/appointments")
     public List<appointmentDTO> getPatientAppointments(@PathVariable Long patientId) {
         patient patient = patientService.getPatientById(patientId);
-        if (patient == null) {
-            throw new patientNotFoundException("Patient with ID " + patientId + " not found");
-        }
-        else {
-            return appointmentClient.getAppointmentsByPatientId(patientId);
-        }
+        return appointmentClient.getAppointmentsByPatientId(patientId);
     }
 
     @GetMapping("/{patientId}/appointments/{appointmentId}")
     public appointmentDTO getPatientAppointment(@PathVariable Long patientId, @PathVariable Long appointmentId){
         patient patient = patientService.getPatientById(patientId);
-        if (patient == null) {
-            throw new patientNotFoundException("Patient with ID " + patientId + " not found");
-        }
-        else {
-            return appointmentClient.getPatientAppointment(patientId, appointmentId);
-        }
+        return appointmentClient.getPatientAppointment(patientId, appointmentId);
     }
     @GetMapping("/{patientId}/scan-results/{scanId}")
     ResponseEntity<scanResultDTO> getScanResultById(@PathVariable Long patientId, @PathVariable Long scanId){
         patient patient = patientService.getPatientById(patientId);
-        if (patient == null) {
-            throw new patientNotFoundException("Patient with ID " + patientId + " not found");
-        }
-        else {
-            return appointmentClient.getScanResultById(patientId, scanId);
-        }
+        return appointmentClient.getScanResultById(patientId, scanId);
     }
     @GetMapping("/{patientId}/scan-results")
     ResponseEntity<List<scanResultDTO>> getScanResultsForPatient(@PathVariable Long patientId){
         patient patient = patientService.getPatientById(patientId);
-        if (patient == null) {
-            throw new patientNotFoundException("Patient with ID " + patientId + " not found");
-        }
-        else {
-            return appointmentClient.getScanResultsForPatient(patientId);
-        }
+        return appointmentClient.getScanResultsForPatient(patientId);
     }
 
 }

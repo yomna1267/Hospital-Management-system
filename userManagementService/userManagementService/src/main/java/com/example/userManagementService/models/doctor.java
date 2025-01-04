@@ -20,7 +20,7 @@ public class doctor implements Serializable {
 
     @OneToOne(cascade = CascadeType.ALL,  orphanRemoval = true)
     @JoinColumn(name = "user_id", referencedColumnName = "id")
-    private Users user;
+    private users user;
 
     @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<workingHours> workingHours;

@@ -46,56 +46,34 @@ public class doctorController {
 
     @GetMapping("/{id}")
     public ResponseEntity<doctor> getDoctorById(@PathVariable Long id) {
-        try {
-            doctor doctor = doctorService.getDoctorById(id);
-            return new ResponseEntity<>(doctor, HttpStatus.OK);
-        } catch (patientNotFoundException ex) {
-            throw new doctorNotFoundException("doctor with ID " + id + " not found");
-        }
+        doctor doctor = doctorService.getDoctorById(id);
+        return new ResponseEntity<>(doctor, HttpStatus.OK);
     }
 
     @GetMapping("/{doctorId}/appointments")
     public List<appointmentDTO> getDoctorAppointments(@PathVariable Long doctorId) {
         doctor doctor = doctorService.getDoctorById(doctorId);
-        if (doctor == null) {
-            throw new doctorNotFoundException("Doctor with ID " + doctorId + " not found");
-        }
-        else {
-             return appointmentClient.getAppointmentsByDoctorId(doctorId);
-        }
+        return appointmentClient.getAppointmentsByDoctorId(doctorId);
     }
 
     @GetMapping("/doctors/{doctorId}/appointments/{appointmentId}")
     public appointmentDTO getDoctorAppointment(@PathVariable Long doctorId, @PathVariable Long appointmentId){
         doctor doctor = doctorService.getDoctorById(doctorId);
-        if (doctor == null) {
-            throw new doctorNotFoundException("Doctor with ID " + doctorId + " not found");
-        }
-        else {
-            return appointmentClient.getDoctorAppointment(doctorId, appointmentId);
-        }
+        return appointmentClient.getDoctorAppointment(doctorId, appointmentId);
     }
 
     @GetMapping("/{doctorId}/search/{patientId}")
     public patientDTO searchPatientById(@PathVariable Long doctorId, @PathVariable Long patientId) {
         doctor doctor = doctorService.getDoctorById(doctorId);
         patient patient = patientService.getPatientById(patientId);
-        if (doctor == null){
-            throw new doctorNotFoundException("Doctor with ID " + doctorId + " not found");
-        }
-        else if(patient == null){
-            throw new patientNotFoundException("Patient with ID " + patientId + " not found");
-        }
-        else {
-            List<appointmentDTO> doctorAppointments = getDoctorAppointments(doctorId);
-            appointmentDTO patientAppointment = doctorAppointments
-                    .stream()
-                    .filter(appointment -> appointment.getPatientId().equals(patientId))
-                    .findFirst()
-                    .orElseThrow(() -> new appointmentNotFoundException("No appointment found for patient with ID: " + patientId));
-            patientDTO patientdto = patientService.mapToPatientDTO(patientAppointment);
-            return patientdto;
-        }
+        List<appointmentDTO> doctorAppointments = getDoctorAppointments(doctorId);
+        appointmentDTO patientAppointment = doctorAppointments
+                .stream()
+                .filter(appointment -> appointment.getPatientId().equals(patientId))
+                .findFirst()
+                .orElseThrow(() -> new appointmentNotFoundException("No appointment found for patient with ID: " + patientId));
+        patientDTO patientdto = patientService.mapToPatientDTO(patientAppointment);
+        return patientdto;
     }
 
     @PostMapping("/{doctorId}/patient/{patientId}/scan-results")
@@ -105,34 +83,27 @@ public class doctorController {
             @RequestBody scanResultDTO scanResultDTO){
         doctor doctor = doctorService.getDoctorById(doctorId);
         patient patient = patientService.getPatientById(patientId);
-        if (doctor == null){
-            throw new doctorNotFoundException("Doctor with ID " + doctorId + " not found");
-        }
-        else if(patient == null){
-            throw new patientNotFoundException("Patient with ID " + patientId + " not found");
-        }
-        else{
-            ResponseEntity<scanResultDTO> scanResult = appointmentClient.addScanResult(doctorId, patientId, scanResultDTO);
-            Long appointmentId = Objects.requireNonNull(scanResult.getBody()).getAppointment().getId();
-            scanMessageDTO scanMessageDTO = new scanMessageDTO();
-            scanMessageDTO.setDoctorId(doctorId);
-            scanMessageDTO.setPatientId(patientId);
-            scanMessageDTO.setAppointmentId(appointmentId);
-            scanMessageDTO.setStatus(patientStatus.UNDERTREATMENT);
-            // Send message to RabbitMQ
-            try {
+        ResponseEntity<scanResultDTO> scanResult = appointmentClient.addScanResult(doctorId, patientId, scanResultDTO);
+        Long appointmentId = Objects.requireNonNull(scanResult.getBody()).getAppointment().getId();
+        //Prepare message
+        scanMessageDTO scanMessageDTO = new scanMessageDTO();
+        scanMessageDTO.setDoctorId(doctorId);
+        scanMessageDTO.setPatientId(patientId);
+        scanMessageDTO.setAppointmentId(appointmentId);
+        scanMessageDTO.setStatus(patientStatus.UNDERTREATMENT);
 
-                String messageJson = objectMapper.writeValueAsString(scanMessageDTO);
-                rabbitTemplate.convertAndSend(STATUS_QUEUE, messageJson);
-                System.out.println("Message sent: " + messageJson);
+        // Send message to RabbitMQ
+        try {
+            String messageJson = objectMapper.writeValueAsString(scanMessageDTO);
+            rabbitTemplate.convertAndSend(STATUS_QUEUE, messageJson);
+            System.out.println("Message sent: " + messageJson);
 
-            } catch (JsonProcessingException  e) {
-                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error serializing message", e);
-            }
-            return new ResponseEntity<>(scanResult.getBody(), HttpStatus.CREATED);
+        } catch (JsonProcessingException  e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error serializing message", e);
         }
-
+        return new ResponseEntity<>(scanResult.getBody(), HttpStatus.CREATED);
     }
+
 
     @PostMapping("/{doctorId}/patient/{patientId}/discharge")
     public ResponseEntity<String> dischargePatient(@PathVariable Long doctorId,
@@ -140,36 +111,21 @@ public class doctorController {
                                                    @RequestBody scanMessageDTO scanMessageDTO) {
         doctor doctor = doctorService.getDoctorById(doctorId);
         patient patient = patientService.getPatientById(patientId);
-        if (doctor == null){
-            throw new doctorNotFoundException("Doctor with ID " + doctorId + " not found");
-        }
-        else if(patient == null){
-            throw new patientNotFoundException("Patient with ID " + patientId + " not found");
-        }
-        else{
-            try {
-                appointmentDTO appointmentDTO = appointmentService.getAppointment(patientId, scanMessageDTO.getAppointmentId());
-                if (Objects.equals(appointmentDTO.getDoctorId(), doctorId)) {
-                    scanMessageDTO.setPatientId(patientId);
-                    scanMessageDTO.setDoctorId(doctorId);
-                    String message = doctorService.dischargePatient(patientId, doctorId, scanMessageDTO);
-                    return new ResponseEntity<>(message, HttpStatus.ACCEPTED);
-                } else {
-                    return new ResponseEntity<>("Appointment with ID " + scanMessageDTO.getAppointmentId()
-                            + " does not belong to doctor with ID " + doctorId, HttpStatus.FORBIDDEN);
-                }
-            } catch (appointmentNotFoundException e) {
-                throw e;
-            }
+        appointmentDTO appointmentDTO = appointmentService.getAppointment(patientId, scanMessageDTO.getAppointmentId());
+        if (Objects.equals(appointmentDTO.getDoctorId(), doctorId)) {
+            scanMessageDTO.setPatientId(patientId);
+            scanMessageDTO.setDoctorId(doctorId);
+            String message = doctorService.dischargePatient(patientId, doctorId, scanMessageDTO);
+            return new ResponseEntity<>(message, HttpStatus.ACCEPTED);
+        } else {
+            return new ResponseEntity<>("Appointment with ID " + scanMessageDTO.getAppointmentId()
+                    + " does not belong to doctor with ID " + doctorId, HttpStatus.FORBIDDEN);
         }
     }
 
     @GetMapping("/{id}/availability")
     public ResponseEntity<List<workingHoursDTO>> getAvailability(@PathVariable Long id){
         doctor doctor = doctorService.getDoctorById(id);
-        if (doctor == null) {
-            throw new doctorNotFoundException("Doctor with ID " + id + " not found");
-        }
         return doctorService.getAvailability(id);
     }
 

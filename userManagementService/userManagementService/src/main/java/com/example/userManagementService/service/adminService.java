@@ -6,9 +6,8 @@ import com.example.userManagementService.exceptions.doctorNotFoundException;
 import com.example.userManagementService.models.doctor;
 import com.example.userManagementService.models.patient;
 import com.example.userManagementService.models.role;
-import com.example.userManagementService.models.Users;
+import com.example.userManagementService.models.users;
 import com.example.userManagementService.repository.doctorRepository;
-import com.example.userManagementService.repository.UserRepository;
 import com.example.userManagementService.repository.patientRepository;
 import com.example.userManagementService.repository.roleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,13 +21,13 @@ import java.util.*;
 public class adminService {
     private final doctorRepository doctorRepository;
     private final patientRepository patientRepository;
-    private final UserRepository userRepository;
+    private final com.example.userManagementService.repository.userRepository userRepository;
     private final roleRepository roleRepository;
     private final workingHoursService workingHoursService;
     private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public adminService(doctorRepository doctorRepository, patientRepository patientRepository, UserRepository userRepository, com.example.userManagementService.repository.roleRepository roleRepository, com.example.userManagementService.service.workingHoursService workingHoursService, PasswordEncoder passwordEncoder) {
+    public adminService(doctorRepository doctorRepository, patientRepository patientRepository, com.example.userManagementService.repository.userRepository userRepository, com.example.userManagementService.repository.roleRepository roleRepository, com.example.userManagementService.service.workingHoursService workingHoursService, PasswordEncoder passwordEncoder) {
         this.doctorRepository = doctorRepository;
         this.patientRepository = patientRepository;
         this.userRepository = userRepository;
@@ -39,7 +38,7 @@ public class adminService {
 
     //ADMIN
     @Transactional
-    public Map<String,String> addAdmin(Users newUser){
+    public Map<String,String> addAdmin(users newUser){
         role adminRole = (role) roleRepository.findByname("ADMIN")
                 .orElseThrow(() -> new RuntimeException("Role 'Admin' not found"));
         newUser.setRole(adminRole);
@@ -47,8 +46,7 @@ public class adminService {
         newUser.setPassword(passwordEncoder.encode(password));
         System.out.println(passwordEncoder.encode(password));
         System.out.println(password);
-        //newUser.setPassword(password);
-        Users savedUser = userRepository.save(newUser);
+        userRepository.save(newUser);
         Map<String, String> response = new HashMap<>();
         response.put("username", String.valueOf(newUser.getUsername()));
         response.put("password", password);
@@ -56,8 +54,8 @@ public class adminService {
     }
 
     @Transactional
-    public Users updateAdmin(Users updatedUser) {
-        Users existingUser = userRepository.findById(updatedUser.getId()).orElseThrow(() ->new userNotFoundException("user with id " + updatedUser.getId() + " not found"));
+    public users updateAdmin(Long id, users updatedUser) {
+        users existingUser = userRepository.findById(id).orElseThrow(() ->new userNotFoundException("user with id " + updatedUser.getId() + " not found"));
         if (existingUser != null) {
             existingUser.setFirstName(updatedUser.getFirstName());
             existingUser.setLastName(updatedUser.getLastName());
@@ -71,35 +69,33 @@ public class adminService {
                 }
                 existingUser.setEmail(updatedUser.getEmail());
             }
-             userRepository.save(existingUser);
+             return (userRepository.save(existingUser));
         }
-        return null;
+        else return null;
     }
 
     @Transactional
-    public Users getUserById(long id) {
-        Optional<Users> user= userRepository.findById(id);
-        if (user.isPresent()) {
-            return user.get();
-        }
-        else{
-            throw new userNotFoundException("user with ID " + id + " not found");
-        }
-
+    public users getUserById(long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new userNotFoundException("User with ID " + id + " not found"));
     }
 
     @Transactional
-    public void deleteAdmin(Users adminToDelete) {
+    public void deleteAdmin(users adminToDelete) {
         userRepository.delete(adminToDelete);
     }
 
     @Transactional
-    public List<Users> getAllAdmins() {
-        return userRepository.findByRoleName("ADMIN");
+    public List<users> getAllAdmins() {
+        List<users> admins = userRepository.findByRoleName("ADMIN");
+        if (admins.isEmpty()) {
+            throw new userNotFoundException("No admins found.");
+        }
+        return admins;
     }
 
     @Transactional
-    public List<Users> getAllUsers(){
+    public List<users> getAllUsers(){
         return userRepository.findAll();
     }
 
@@ -112,13 +108,13 @@ public class adminService {
         newDoctor.getUser().setRole(doctorRole);
         String password = UUID.randomUUID().toString();
         newDoctor.getUser().setPassword(passwordEncoder.encode(password));
+        users savedUser = userRepository.save(newDoctor.getUser());
+        newDoctor.setUser(savedUser);
+        newDoctor.setId(savedUser.getId());
+        doctorRepository.save(newDoctor);
         Map<String,String> response = new HashMap<>();
         response.put("username", newDoctor.getUser().getUsername());
         response.put("password", password);
-        Users savedUser = userRepository.save(newDoctor.getUser());
-        newDoctor.setUser(savedUser);
-        newDoctor.setId(savedUser.getId());
-        doctor savedDoctor= doctorRepository.save(newDoctor);
         return response;
     }
 
@@ -127,8 +123,8 @@ public class adminService {
         doctor existingDoctor = doctorRepository.findById(doctorId)
                 .orElseThrow(() -> new doctorNotFoundException("Doctor with ID " + doctorId + " not found"));
 
-        Users existingUser = existingDoctor.getUser();
-        Users updatedUser = updatedDoctor.getUser();
+        users existingUser = existingDoctor.getUser();
+        users updatedUser = updatedDoctor.getUser();
 
         existingUser.setFirstName(updatedUser.getFirstName());
         existingUser.setLastName(updatedUser.getLastName());
@@ -164,12 +160,8 @@ public class adminService {
 
     @Transactional
     public doctor getDoctorById(long id) {
-        Optional<doctor> doctor = doctorRepository.findById(id);
-        if (doctor.isPresent()) {
-            return doctor.get();
-        } else {
-            throw new doctorNotFoundException("doctor with ID " + id + " not found");
-        }
+        return doctorRepository.findById(id)
+                .orElseThrow(() -> new doctorNotFoundException("Doctor with ID " + id + " not found"));
     }
 
 
@@ -183,10 +175,10 @@ public class adminService {
         String password = UUID.randomUUID().toString();
         newPatient.getUser().setPassword(passwordEncoder.encode(password));
 
-        Users savedUser = userRepository.save(newPatient.getUser());
+        users savedUser = userRepository.save(newPatient.getUser());
         newPatient.setUser(savedUser);
         newPatient.setId(savedUser.getId());
-        patient savedPatient = patientRepository.save(newPatient);
+        patientRepository.save(newPatient);
 
         Map<String, String> response = new HashMap<>();
         response.put("username", newPatient.getUser().getUsername());
@@ -199,8 +191,8 @@ public class adminService {
         patient existingPatient = patientRepository.findById(id)
                 .orElseThrow(() -> new patientNotFoundException("Patient with ID " + id + " not found"));
 
-        Users existingUser = existingPatient.getUser();
-        Users updatedUser = updatedPatient.getUser();
+        users existingUser = existingPatient.getUser();
+        users updatedUser = updatedPatient.getUser();
 
         existingUser.setFirstName(updatedUser.getFirstName());
         existingUser.setLastName(updatedUser.getLastName());
@@ -234,22 +226,12 @@ public class adminService {
 
     @Transactional
     public patient getPatientById(long id) {
-        Optional<patient> patient= patientRepository.findById(id);
-        if (patient.isPresent()) {
-            return patient.get();
-        }
-        else{
-            throw new patientNotFoundException("patient with ID " + id + " not found");
-        }
+        return patientRepository.findById(id)
+                .orElseThrow(() -> new patientNotFoundException("Doctor with ID " + id + " not found"));
     }
     @Transactional
-    public Users getUserByUsername(String userName) {
-        Optional<Users> user= userRepository.findByUsername(userName);
-        if (user.isPresent()) {
-            return user.get();
-        }
-        else{
-            throw new userNotFoundException("user with username " + userName + " not found");
-        }
+    public users getUserByUsername(String userName) {
+        return userRepository.findByUsername(userName)
+                .orElseThrow(() -> new userNotFoundException("User with username " + userName + " not found"));
     }
 }

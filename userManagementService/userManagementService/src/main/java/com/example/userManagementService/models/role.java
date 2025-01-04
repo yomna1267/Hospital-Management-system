@@ -21,6 +21,6 @@ public class role implements Serializable {
     private String name;
     @OneToMany(mappedBy = "role", cascade = CascadeType.ALL)
     @JsonIgnore
-    private List<Users> users;
+    private List<com.example.userManagementService.models.users> users;
 
 }
