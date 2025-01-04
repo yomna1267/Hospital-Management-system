@@ -4,6 +4,8 @@ import com.example.userManagementService.models.Doctor;
 import com.example.userManagementService.models.Patient;
 import com.example.userManagementService.models.Users;
 import com.example.userManagementService.service.AdminService;
+import com.example.userManagementService.service.JWTService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
@@ -17,9 +19,11 @@ import java.util.Map;
 @Secured("ROLE_ADMIN")
 public class AdminController {
     private final AdminService adminService;
+    public final JWTService jwtService;
 
-    public AdminController(AdminService adminService) {
+    public AdminController(AdminService adminService, JWTService jwtService) {
         this.adminService = adminService;
+        this.jwtService = jwtService;
     }
 
     //ADMIN
@@ -35,12 +39,12 @@ public class AdminController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteAdmin(@PathVariable long id) {
-        Users adminToDelete = adminService.getUserById(id);
-        adminService.deleteAdmin(adminToDelete);
-        return ResponseEntity.noContent().build();
-    }
+//    @DeleteMapping("/{id}")
+//    public ResponseEntity<Void> deleteAdmin(@PathVariable long id) {
+//        Users adminToDelete = adminService.getUserById(id);
+//        adminService.deleteAdmin(adminToDelete);
+//        return ResponseEntity.noContent().build();
+//    }
 
     @GetMapping("/admins")
     public ResponseEntity<List<Users>> getAllAdmins() {
@@ -48,8 +52,15 @@ public class AdminController {
         return ResponseEntity.status(HttpStatus.OK).body(admins);
     }
 
-    @GetMapping("/id/{id}")
-    public ResponseEntity<Users> getUserById(@PathVariable long id) {
+//    @GetMapping("/id/{id}")
+//    public ResponseEntity<Users> getUserById(@PathVariable long id) {
+//        Users user = adminService.getUserById(id);
+//        return ResponseEntity.status(HttpStatus.OK).body(user);
+//    }
+    @GetMapping("/id")
+    public ResponseEntity<Users> getUserById(HttpServletRequest request) {
+        long id = Long.valueOf(jwtService.extractID(request));
+        System.out.println(id);
         Users user = adminService.getUserById(id);
         return ResponseEntity.status(HttpStatus.OK).body(user);
     }
@@ -60,8 +71,9 @@ public class AdminController {
         return ResponseEntity.status(HttpStatus.OK).body(users);
     }
 
-    @GetMapping("/username/{userName}")
-    public ResponseEntity<Users> getUserByUsername(@PathVariable String userName){
+    @GetMapping("/username")
+    public ResponseEntity<Users> getUserByUsername(HttpServletRequest request){
+        String userName = jwtService.extractUsername(request);
         Users user = adminService.getUserByUsername(userName);
         return ResponseEntity.status(HttpStatus.OK).body(user);
     }

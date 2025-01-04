@@ -11,6 +11,7 @@ import com.example.userManagementService.repository.DoctorRepository;
 import com.example.userManagementService.repository.PatientRepository;
 import com.example.userManagementService.repository.UserRepository;
 import com.example.userManagementService.repository.RoleRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -76,11 +77,18 @@ public class AdminService {
         return null;
     }
 
-    @Transactional
+//    @Transactional
+//    public Users getUserById(long id) {
+//        return userRepository.findById(id)
+//                .orElseThrow(() -> new UserNotFoundException("User with ID " + id + " not found"));
+//    }
+        @Transactional
     public Users getUserById(long id) {
+//        long id = jwtService.extractID(request);
         return userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("User with ID " + id + " not found"));
     }
+
 
     @Transactional
     public void deleteAdmin(Users adminToDelete) {

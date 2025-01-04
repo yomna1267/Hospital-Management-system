@@ -64,15 +64,15 @@ public class AuthService {
         }
 
         refreshToken = authHeader.substring(7).trim();
-        username = jwtService.extractUsername(refreshToken);
+        username = jwtService.extractUsername(request);
 
         System.out.println(refreshToken);
         if (username != null) {
             Optional<Users> user = userRepository.findByUsername(username);
             System.out.println(accessToken);
             System.out.println(newRefreshToken);
-            System.out.println(jwtService.isTokenValid(refreshToken,user.get().getUsername()));
-            if (jwtService.isTokenValid(refreshToken, user.get().getUsername())) {
+            System.out.println(jwtService.isTokenValid(request,user.get().getUsername()));
+            if (jwtService.isTokenValid(request, user.get().getUsername())) {
                 accessToken = jwtService.generateToken(username,user.get().getRole().getName(),accessTokenExpiration);
                 newRefreshToken = jwtService.generateToken(username,null,refreshTokenExpiration);
             }
