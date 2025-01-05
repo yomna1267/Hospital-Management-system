@@ -1,4 +1,4 @@
-package com.example.appointmentService.config;
+package com.example.userManagementService.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,28 +9,12 @@ import org.springframework.amqp.core.TopicExchange;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestTemplate;
 
 @Configuration
 public class AppConfig {
-<<<<<<< HEAD:userManagementService/userManagementService/src/main/java/com/example/userManagementService/config/AppConfig.java
     private static final Logger logger = LoggerFactory.getLogger(AppConfig.class);
-=======
->>>>>>> 0903e0ddec8e7446518ca5a8aeff797fbe5a83c6:appointmentService/appointmentService/src/main/java/com/example/appointmentService/config/AppConfig.java
 
-    @Bean
-    public Queue appointmentQueue() {
-        return new Queue("appointmentQueue", true);
-    }
-
-    @Bean
-    public TopicExchange exchange() {
-        return new TopicExchange("appointmentExchange");
-    }
-
-    @Bean
-    public Binding binding(Queue appointmentQueue, TopicExchange exchange) {
-        return BindingBuilder.bind(appointmentQueue).to(exchange).with("appointmentRoutingKey");
-    }
     @Bean
     public Queue statusQueue() {
         logger.info("Creating statusQueue...");
@@ -38,15 +22,14 @@ public class AppConfig {
     }
 
     @Bean
-    public TopicExchange exchangeStatus() {
+    public TopicExchange exchange() {
         return new TopicExchange("statusExchange");
     }
 
     @Bean
-    public Binding bindingStatus(Queue statusQueue, TopicExchange exchange) {
+    public Binding binding(Queue statusQueue, TopicExchange exchange) {
         return BindingBuilder.bind(statusQueue).to(exchange).with("statusRoutingKey");
     }
-<<<<<<< HEAD:userManagementService/userManagementService/src/main/java/com/example/userManagementService/config/AppConfig.java
 
     @Bean
     @LoadBalanced
@@ -69,6 +52,3 @@ public class AppConfig {
         return BindingBuilder.bind(securityQueue).to(securityExchange).with("securityRoutingKey");
     }
 }
-=======
-}
->>>>>>> 0903e0ddec8e7446518ca5a8aeff797fbe5a83c6:appointmentService/appointmentService/src/main/java/com/example/appointmentService/config/AppConfig.java
