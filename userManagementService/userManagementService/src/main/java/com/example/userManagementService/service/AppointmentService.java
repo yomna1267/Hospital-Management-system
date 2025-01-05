@@ -36,7 +36,7 @@ public class AppointmentService {
 
             return response.getBody();
         } catch (HttpClientErrorException.NotFound e) {
-            throw new AppointmentNotFoundException("Appointment with ID " + appointmentId + " not found.");
+            throw new AppointmentNotFoundException("Appointment with ID " + appointmentId + " not found for this patient.");
         }
     }
 

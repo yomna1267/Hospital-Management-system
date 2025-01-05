@@ -1,6 +1,5 @@
-package com.example.userManagementService.config;
+package com.example.userManagementService.feign;
 
-import com.example.userManagementService.feign.CustomFeignErrorDecoder;
 import feign.codec.ErrorDecoder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

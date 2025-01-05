@@ -122,8 +122,9 @@ public class DoctorController {
             String message = doctorService.dischargePatient(patientId, doctorId, scanMessageDTO);
             return new ResponseEntity<>(message, HttpStatus.ACCEPTED);
         } else {
-            return new ResponseEntity<>("Appointment with ID " + scanMessageDTO.getAppointmentId()
-                    + " does not belong to doctor with ID " + doctorId, HttpStatus.FORBIDDEN);
+            throw new AppointmentNotFoundException(
+                    "Appointment with ID " + scanMessageDTO.getAppointmentId()
+                            + " does not belong to doctor with ID " + doctorId);
         }
     }
 

@@ -1,6 +1,5 @@
 package com.example.userManagementService.feign;
 
-import com.example.userManagementService.config.FeignConfig;
 import com.example.userManagementService.dto.AppointmentDTO;
 import com.example.userManagementService.dto.ScanResultDTO;
 import org.springframework.cloud.openfeign.FeignClient;
