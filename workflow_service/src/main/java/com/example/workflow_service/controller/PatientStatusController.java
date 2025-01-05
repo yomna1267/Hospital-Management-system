@@ -16,16 +16,4 @@ public class PatientStatusController {
     @Autowired
     private PatientStatusService patientStatusService;
 
-    @PostMapping("/{patientId}/{appointmentId}")
-    public ResponseEntity<PatientStatusDTO> createState(@PathVariable Long patientId, @PathVariable Long appointmentId) {
-        PatientStatusDTO patientStatusDTO = patientStatusService.createRegisteredEvent(patientId, appointmentId);
-        System.out.println(patientStatusDTO);
-        return new ResponseEntity<PatientStatusDTO>(patientStatusDTO,HttpStatus.CREATED);
-    }
-
-    @PostMapping("/{patientId}/{appointmentId}/{event}")
-    public ResponseEntity<PatientStatusDTO> processEvent(@PathVariable Long patientId, @PathVariable Long appointmentId, @PathVariable Patient_Events event) {
-        PatientStatusDTO patientStatusDTO = patientStatusService.handleEvents(patientId, appointmentId, event);
-        return new ResponseEntity<PatientStatusDTO>(patientStatusDTO,HttpStatus.OK);
-    }
 }

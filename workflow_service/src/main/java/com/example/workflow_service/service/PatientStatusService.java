@@ -71,40 +71,46 @@ public class PatientStatusService {
 
     }
 
-    //@RabbitListener(queues = "statusQueue")
+    @RabbitListener(queues = "statusQueue")
     public void listen(String message)
     {
         try {
             // Deserialize the incoming JSON message
             PatientStatusMessage patientStatusMessage = objectMapper.readValue(message, PatientStatusMessage.class);
 
-            //once an appointment is created
-            if(patientStatusMessage.getEvent()==Patient_Events.Register)
+            Optional<PatientStatus> patientStatusOptional = patientStatusRepository.findLatestByPatientIdAndAppointmentId(patientStatusMessage.getPatientId(),patientStatusMessage.getAppointmentId());
+            if(!patientStatusOptional.isPresent())
             {
-                PatientStatus patientStatus = new PatientStatus(patientStatusMessage.getPatientId(),patientStatusMessage.getAppointmentId(), Patient_States.REGISTERED);
-                patientStatusRepository.save(patientStatus);
-                return;
+                if(patientStatusMessage.getEvent()==Patient_Events.Register)
+                {
+                    PatientStatus patientStatus1 = new PatientStatus(patientStatusMessage.getPatientId(),patientStatusMessage.getAppointmentId(), Patient_States.REGISTERED);
+                    patientStatusRepository.save(patientStatus1);
+                }else {
+                    throw new EntityNotFoundException("NO Patient found");
+                }
             }
 
-            //post scans, discharging, cancel
-            PatientStatus patientStatus = patientStatusRepository.findLatestByPatientIdAndAppointmentId(patientStatusMessage.getPatientId(),patientStatusMessage.getAppointmentId())
-                    .orElseThrow(()->new EntityNotFoundException("Patient not found"));
+            else {
+                PatientStatus patientStatus = patientStatusOptional.get();
+                System.out.println(patientStatus.getId()) ;
+                System.out.println(patientStatus.getState());
 
-            System.out.println(patientStatus.getId()) ;
-            System.out.println(patientStatus.getState());
+                if(patientStatus.getState()==Patient_States.DISCHARGED)
+                {
+                    throw new IllegalStateException("Patient has already finished this appointment. State cannot be changed.");
+                }
+                StateMachine<Patient_States, Patient_Events> stateMachine = stateMachineFactory.getStateMachine();
+                stateMachine.start();
+                stateMachine.getStateMachineAccessor()
+                        .doWithAllRegions(accessor -> accessor.resetStateMachine(
+                                new DefaultStateMachineContext<>(patientStatus.getState(), null, null, null)));
+                stateMachine.getExtendedState().getVariables().put("patientStatus", patientStatus);
 
+                stateMachine.sendEvent(patientStatusMessage.getEvent()); //TREATMENT_STARTED, TREATMENT_COMPLETED, SKIP_TREATMENT, APPOINTMENT_CANCELLED
 
-            StateMachine<Patient_States, Patient_Events> stateMachine = stateMachineFactory.getStateMachine();
-            stateMachine.start();
-            stateMachine.getStateMachineAccessor()
-                    .doWithAllRegions(accessor -> accessor.resetStateMachine(
-                            new DefaultStateMachineContext<>(patientStatus.getState(), null, null, null)));
-            stateMachine.getExtendedState().getVariables().put("patientStatus", patientStatus);
-
-            stateMachine.sendEvent(patientStatusMessage.getEvent()); //TREATMENT_STARTED, TREATMENT_COMPLETED, SKIP_TREATMENT, APPOINTMENT_CANCELLED
-
-            patientStatus.setState(stateMachine.getState().getId());
-            patientStatusRepository.save(patientStatus);
+                patientStatus.setState(stateMachine.getState().getId());
+                patientStatusRepository.save(patientStatus);
+            }
 
         }catch (Exception e){
             System.out.println(e.getMessage());

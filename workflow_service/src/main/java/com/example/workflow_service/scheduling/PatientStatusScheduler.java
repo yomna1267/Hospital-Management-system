@@ -17,8 +17,8 @@ public class PatientStatusScheduler {
     private PatientStatusRepository patientStatusRepository;
 
     //sec min hours days etc
-    //@Scheduled(cron = "0 0 0 * * ?") // Run the job daily at midnight
-    @Scheduled(fixedRate = 20000) // Runs every 20 seconds
+    @Scheduled(cron = "0 0 0 * * ?") // Run the job daily at midnight
+    //@Scheduled(fixedRate = 20000) // Runs every 20 seconds
     public void cancelLongRegisteredPatients() {
         // Fetch all patients
         var patients = patientStatusRepository.findAll();
