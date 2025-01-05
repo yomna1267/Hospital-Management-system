@@ -5,6 +5,7 @@ import com.example.userManagementService.models.ResetPasswordRequest;
 import com.example.userManagementService.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class UsersController {
 
+    @Lazy
     private final UserService userService;
 
     @PutMapping("/change-password")
@@ -21,7 +23,7 @@ public class UsersController {
                                             @RequestBody ChangePasswordRequest changePasswordRequest)
     {
         userService.changePassword(request, changePasswordRequest);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok("Password changed successfully.");
     }
 
 

@@ -55,7 +55,7 @@ public class AuthService {
         tokens.put("Access-token",accessToken);
         tokens.put("Refresh-token",refreshToken);
 
-        // Send the JSON message to RabbitMQ
+//         Send the JSON message to RabbitMQ
         rabbitTemplate.convertAndSend(SecurityQueue, accessToken);
         return tokens;
     }

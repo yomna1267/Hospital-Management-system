@@ -68,22 +68,32 @@ public class JWTService {
         try {
             String token = extractTokenFromHeader(request);
             if (token == null) {
-                throw new IllegalArgumentException("No token in the request header.");
+                throw new IllegalArgumentException("Header with no token.");
             }
             String tokenUsername = extractUsername(request);
-            return username.equals(tokenUsername) && !isTokenExpired(token);
+            if (!username.equals(tokenUsername)) {
+                throw new IllegalArgumentException("No matching between username and token username");
+            }
+            if (isTokenExpired(token)) {
+                throw new OtpOrTokenExpiredException("Expired Token");
+            }
+            return true;
 
-        }
-        catch (OtpOrTokenExpiredException exception){
-           throw new OtpOrTokenExpiredException("Token is expired");
-        }
+        }catch(OtpOrTokenExpiredException exception){
+                throw exception;
+            } catch(IllegalArgumentException e){
+                throw new IllegalArgumentException("Invalid token: " + e.getMessage());
+            } catch(Exception e){
+                throw new RuntimeException("An unexpected error occurred during token validation.", e);
+            }
     }
+
 
     private boolean isTokenExpired(String token) {
         Claims claims = extractClaims(token);
         Date expirationDate = claims.getExpiration();
         if (expirationDate.before(new Date())) {
-            throw new TokenExpiredException("The token has expired.");
+            throw new TokenExpiredException("Expired Token.");
         }
 
         return false;

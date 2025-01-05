@@ -1,6 +1,7 @@
 package com.example.userManagementService.service;
 
 import com.example.userManagementService.exceptions.IncorrectPasswordException;
+import com.example.userManagementService.exceptions.RateLimitExceedException;
 import com.example.userManagementService.exceptions.UserNotFoundException;
 import com.example.userManagementService.models.ChangePasswordRequest;
 import com.example.userManagementService.models.OtpUtil;
@@ -9,6 +10,8 @@ import com.example.userManagementService.models.Users;
 import com.example.userManagementService.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
@@ -24,18 +27,25 @@ public class UserService {
     private final OtpUtil otpUtil;
     private final RedisService redisService;
     private final JWTService jwtService;
+    private final RateLimiterService rateLimiterService;
 
-    public void changePassword(HttpServletRequest request, ChangePasswordRequest changePasswordRequest)
-    {
+
+    public void changePassword(HttpServletRequest request, ChangePasswordRequest changePasswordRequest) {
         String connectedUserUsername = jwtService.extractUsername(request);
         Users connectedUser = userRepository.findByUsername(connectedUserUsername)
-                .orElseThrow(() -> new UserNotFoundException("User with username: " + connectedUserUsername + "is not found"));
+                .orElseThrow(() -> new UserNotFoundException("User with username: " + connectedUserUsername + " is not found"));
 
-        if(!passwordEncoder.matches(changePasswordRequest.getCurrentPassword(),connectedUser.getPassword()))
-            throw new IncorrectPasswordException("Password is incorrect for user : "+connectedUserUsername);
+        if (rateLimiterService.isRateLimited(connectedUserUsername)) {
+            throw new RateLimitExceedException("Too many password change attempts. Please try again later.");
+        }
 
-        if(!changePasswordRequest.getNewPassword().equals(changePasswordRequest.getConfirmPassword()))
-            throw new IncorrectPasswordException("No Matching between new password and its confirmation");
+        if (!passwordEncoder.matches(changePasswordRequest.getCurrentPassword(), connectedUser.getPassword())) {
+            throw new IncorrectPasswordException("Password is incorrect for user: " + connectedUserUsername);
+        }
+
+        if (!changePasswordRequest.getNewPassword().equals(changePasswordRequest.getConfirmPassword())) {
+            throw new IncorrectPasswordException("No match between new password and its confirmation.");
+        }
 
         connectedUser.setPassword(passwordEncoder.encode(changePasswordRequest.getNewPassword()));
         userRepository.save(connectedUser);

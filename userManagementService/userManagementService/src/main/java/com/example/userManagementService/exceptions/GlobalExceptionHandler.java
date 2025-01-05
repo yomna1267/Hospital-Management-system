@@ -1,5 +1,6 @@
 package com.example.userManagementService.exceptions;
 
+import com.example.userManagementService.service.RateLimiterService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -41,16 +42,26 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(new ErrorResponse("Wrong Password", ex.getMessage(), HttpStatus.NOT_FOUND.value()), HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler(TokenExpiredException.class)
-    public ResponseEntity<?> handleTokenExpiredException(TokenExpiredException ex) {
-        return new ResponseEntity<>(new ErrorResponse("Expired token", ex.getMessage(), HttpStatus.NOT_FOUND.value()), HttpStatus.NOT_FOUND);
-    }
+//    @ExceptionHandler(TokenExpiredException.class)
+//    public ResponseEntity<?> handleTokenExpiredException(TokenExpiredException ex) {
+//        return new ResponseEntity<>(new ErrorResponse("Expired token", ex.getMessage(), HttpStatus.NOT_FOUND.value()), HttpStatus.NOT_FOUND);
+//    }
 
 
     @ExceptionHandler(OtpOrTokenExpiredException.class)
-    public ResponseEntity<String> handleOtpExpiredException(OtpOrTokenExpiredException ex) {
+    public ResponseEntity<String> handleTokenExpired(OtpOrTokenExpiredException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<String> handleIllegalArgumentException(IllegalArgumentException ex) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
+    @ExceptionHandler(RateLimitExceedException.class)
+    public ResponseEntity<String> handleRateLimitExceededException(RateLimitExceedException ex) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(ex.getMessage());
+    }
+
 
 
 }
