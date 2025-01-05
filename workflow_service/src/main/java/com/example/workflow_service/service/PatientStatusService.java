@@ -95,7 +95,7 @@ public class PatientStatusService {
                 System.out.println(patientStatus.getId()) ;
                 System.out.println(patientStatus.getState());
 
-                if(patientStatus.getState()==Patient_States.DISCHARGED)
+                if(patientStatus.getState()==Patient_States.DISCHARGED || patientStatus.getState()==Patient_States.CANCELLED)
                 {
                     throw new IllegalStateException("Patient has already finished this appointment. State cannot be changed.");
                 }
@@ -106,7 +106,9 @@ public class PatientStatusService {
                                 new DefaultStateMachineContext<>(patientStatus.getState(), null, null, null)));
                 stateMachine.getExtendedState().getVariables().put("patientStatus", patientStatus);
 
-                stateMachine.sendEvent(patientStatusMessage.getEvent()); //TREATMENT_STARTED, TREATMENT_COMPLETED, SKIP_TREATMENT, APPOINTMENT_CANCELLED
+                Patient_Events currentEvent = patientStatusMessage.getEvent();
+
+                stateMachine.sendEvent(currentEvent); //TREATMENT_STARTED, TREATMENT_COMPLETED, SKIP_TREATMENT, APPOINTMENT_CANCELLED
 
                 patientStatus.setState(stateMachine.getState().getId());
                 patientStatusRepository.save(patientStatus);

@@ -32,7 +32,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Patien
                 .and()
                 .withExternal().source(Patient_States.UNDERTREATMENT).target(Patient_States.DISCHARGED).event(Patient_Events.TREATMENT_COMPLETED)
                 .and()
-                .withExternal().source(Patient_States.REGISTERED).target(Patient_States.DISCHARGED).event(Patient_Events.SKIP_TREATMENT)
+                .withExternal().source(Patient_States.REGISTERED).target(Patient_States.DISCHARGED).event(Patient_Events.TREATMENT_COMPLETED)
                 .and()
                 .withExternal().source(Patient_States.REGISTERED).target(Patient_States.CANCELLED).event(Patient_Events.APPOINTMENT_CANCELLED)
                 .and()
