@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
 
-@FeignClient(name = "user-management-service", url = "http://localhost:8083")
+@FeignClient(name = "user-management-service")
 public interface doctorClient {
 
     @GetMapping("/api/doctor/{doctorId}/availability")
