@@ -20,17 +20,17 @@ public class EmailService {
     private final JavaMailSender javaMailSender;
     private final JavaMailSenderImpl mailSender;
 
-    public String sendForgetPasswordCode(String to, String otp){
+    public String sendForgetPasswordCode(String to){
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom("jasmine.hajjaj@gizasystems.onmicrosoft.com");
+        message.setFrom("yasmeenhaggag3@gmail.com");
         message.setTo(to);
         message.setSubject("Reset ur password");
-
-        message.setText("Reset password code : " + otp + "\n" +
+        String forgetPasswordCode = UUID.randomUUID().toString().substring(0,6);
+        message.setText("Reset password code : " + forgetPasswordCode + "\n" +
                         "It is valid for 5 minutes");
 
         mailSender.send(message);
-        return otp;
+        return forgetPasswordCode;
     }
 
 

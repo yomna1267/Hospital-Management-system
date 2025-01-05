@@ -6,12 +6,12 @@ import com.example.userManagementService.exceptions.DoctorNotFoundException;
 import com.example.userManagementService.models.Doctor;
 import com.example.userManagementService.models.Patient;
 import com.example.userManagementService.models.Role;
+import com.example.userManagementService.exceptions.userNotFoundException;
 import com.example.userManagementService.models.Users;
 import com.example.userManagementService.repository.DoctorRepository;
 import com.example.userManagementService.repository.PatientRepository;
 import com.example.userManagementService.repository.UserRepository;
 import com.example.userManagementService.repository.RoleRepository;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -48,14 +48,19 @@ public class AdminService {
         newUser.setPassword(passwordEncoder.encode(password));
         userRepository.save(newUser);
         Map<String, String> response = new HashMap<>();
-        response.put("username", String.valueOf(newUser.getUsername()));
-        response.put("password", password);
+        response.put("Username", String.valueOf(newUser.getUsername()));
+        response.put("Password", password);
         return response;
     }
 
     @Transactional
+<<<<<<< HEAD
     public Map<String,String> updateAdmin(Long id, Users updatedUser) {
         Users existingUser = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException("user with id " + updatedUser.getId() + " not found"));
+=======
+    public Users updateAdmin(Users updatedUser) {
+        Users existingUser = userRepository.findById(updatedUser.getId()).orElseThrow(() ->new userNotFoundException("user with id " + updatedUser.getId() + " not found"));
+>>>>>>> parent of b1a71f2 (some enhancements & seka Redis)
         if (existingUser != null) {
             existingUser.setFirstName(updatedUser.getFirstName());
             existingUser.setLastName(updatedUser.getLastName());
@@ -79,8 +84,24 @@ public class AdminService {
 
     @Transactional
     public Users getUserById(long id) {
+<<<<<<< HEAD
         return userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("User with ID " + id + " not found"));
+=======
+        Optional<Users> user= userRepository.findById(id);
+        if (user.isPresent()) {
+            return user.get();
+        }
+        else{
+            throw new userNotFoundException("user with ID " + id + " not found");
+        }
+
+>>>>>>> parent of b1a71f2 (some enhancements & seka Redis)
+    }
+
+    @Transactional
+    public void deleteAdmin(Users adminToDelete) {
+        userRepository.delete(adminToDelete);
     }
 
     @Transactional
@@ -101,11 +122,6 @@ public class AdminService {
         return users;
     }
 
-    @Transactional
-    public void deleteAdmin(Users adminToDelete) {
-        userRepository.delete(adminToDelete);
-    }
-
 
     //DOCTOR
     @Transactional
@@ -120,8 +136,8 @@ public class AdminService {
         newDoctor.setId(savedUser.getId());
         doctorRepository.save(newDoctor);
         Map<String,String> response = new HashMap<>();
-        response.put("username", newDoctor.getUser().getUsername());
-        response.put("password", password);
+        response.put("Username", newDoctor.getUser().getUsername());
+        response.put("Password", password);
         return response;
     }
 
@@ -192,8 +208,8 @@ public class AdminService {
         newPatient.setId(savedUser.getId());
         patientRepository.save(newPatient);
         Map<String, String> response = new HashMap<>();
-        response.put("username", newPatient.getUser().getUsername());
-        response.put("password", password);
+        response.put("Username", newPatient.getUser().getUsername());
+        response.put("Password", password);
         return response;
     }
 

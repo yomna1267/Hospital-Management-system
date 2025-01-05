@@ -32,11 +32,6 @@ public class CustomFeignErrorDecoder implements ErrorDecoder {
                             HttpStatus.NOT_FOUND,
                             responseBody
                     );
-                case 400:
-                    return new ResponseStatusException(
-                            HttpStatus.BAD_REQUEST,
-                            responseBody
-                    );
                 default:
                     return new ResponseStatusException(
                             HttpStatus.INTERNAL_SERVER_ERROR,

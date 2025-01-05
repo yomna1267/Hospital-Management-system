@@ -1,46 +1,37 @@
 package com.example.userManagementService.controller;
 
-import com.example.userManagementService.dto.ChangePasswordRequest;
-import com.example.userManagementService.dto.ResetPasswordRequest;
+import com.example.userManagementService.models.ChangePasswordRequest;
+import com.example.userManagementService.models.ForgetPasswordRequest;
 import com.example.userManagementService.service.UserService;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
 public class UsersController {
 
-    @Lazy
     private final UserService userService;
-
     @PutMapping("/change-password")
-    public ResponseEntity<?> changePassword(HttpServletRequest request,
-                                            @RequestBody ChangePasswordRequest changePasswordRequest)
-    {
-        userService.changePassword(request, changePasswordRequest);
-        return ResponseEntity.ok("Password changed successfully.");
+    public void changePassword(@RequestBody ChangePasswordRequest changePasswordRequest,
+                               Principal connectedUser){
+        userService.changePassword(changePasswordRequest,connectedUser);
     }
 
-
     @PostMapping("/forget-password/{username}")
-    public ResponseEntity<String> forgetPassword(@PathVariable String username)
-    {
+    public ResponseEntity<Void> forgetPassword(@PathVariable String username){
         userService.forgetPassword(username);
-        return ResponseEntity.ok("Code is sent to ur email");
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/reset-password")
-    public ResponseEntity<String> resetPassword(@RequestBody ResetPasswordRequest request){
-
-            userService.resetPassword(request);
-            return ResponseEntity.noContent().build();
-
+    public ResponseEntity<Void> resetPassword(@RequestParam String username,
+                                                @RequestParam String code,
+                                                @RequestParam String newPassword){
+        userService.resetPassword(username,code,newPassword);
+        return ResponseEntity.ok().build();
     }
-
-
 }

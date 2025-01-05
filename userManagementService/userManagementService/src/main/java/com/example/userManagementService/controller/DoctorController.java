@@ -6,7 +6,10 @@ import com.example.userManagementService.exceptions.AppointmentNotFoundException
 import com.example.userManagementService.feign.AppointmentClient;
 import com.example.userManagementService.models.Doctor;
 import com.example.userManagementService.models.Patient;
-import com.example.userManagementService.service.*;
+import com.example.userManagementService.service.JWTService;
+import com.example.userManagementService.service.AppointmentService;
+import com.example.userManagementService.service.DoctorService;
+import com.example.userManagementService.service.PatientService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
@@ -35,8 +38,6 @@ public class DoctorController {
     private RabbitTemplate rabbitTemplate;
 
     private static final String STATUS_QUEUE = "statusQueue";
-    @Autowired
-    private AuthService authService;
 
     public DoctorController(DoctorService doctorService, PatientService patientService, AppointmentClient appointmentClient, AppointmentService appointmentService, JWTService jwtService) {
         this.doctorService = doctorService;
@@ -46,38 +47,30 @@ public class DoctorController {
         this.jwtService = jwtService;
     }
 
-    @GetMapping("/{doctorId}")
-    public ResponseEntity<Doctor> getDoctorById(@PathVariable Long doctorId, HttpServletRequest request) {
-        Long doctorIdFromToken = jwtService.extractID(request);
-        authService.validateUserAccess(doctorIdFromToken, doctorId);
-        Doctor doctor = doctorService.getDoctorById(doctorId);
-        return ResponseEntity.status(HttpStatus.OK).body(doctor);
+    @GetMapping("/{id}")
+    public ResponseEntity<Doctor> getDoctorById(@PathVariable Long id, HttpServletRequest request) {
 
+        Doctor doctor = doctorService.getDoctorById(id);
+        return new ResponseEntity<>(doctor, HttpStatus.OK);
     }
 
     @GetMapping("/{doctorId}/appointments")
-    public List<AppointmentDTO> getDoctorAppointments(@PathVariable Long doctorId, HttpServletRequest request) {
-        Long doctorIdFromToken = jwtService.extractID(request);
-        authService.validateUserAccess(doctorIdFromToken, doctorId);
+    public List<AppointmentDTO> getDoctorAppointments(@PathVariable Long doctorId) {
         Doctor doctor = doctorService.getDoctorById(doctorId);
         return appointmentClient.getAppointmentsByDoctorId(doctorId);
     }
 
     @GetMapping("/doctors/{doctorId}/appointments/{appointmentId}")
-    public AppointmentDTO getDoctorAppointment(@PathVariable Long doctorId, @PathVariable Long appointmentId, HttpServletRequest request) {
-        Long doctorIdFromToken = jwtService.extractID(request);
-        authService.validateUserAccess(doctorIdFromToken, doctorId);
+    public AppointmentDTO getDoctorAppointment(@PathVariable Long doctorId, @PathVariable Long appointmentId){
         Doctor doctor = doctorService.getDoctorById(doctorId);
         return appointmentClient.getDoctorAppointment(doctorId, appointmentId);
     }
 
     @GetMapping("/{doctorId}/search/{patientId}")
-    public PatientDTO searchPatientById(@PathVariable Long doctorId, @PathVariable Long patientId, HttpServletRequest request) {
-        Long doctorIdFromToken = jwtService.extractID(request);
-        authService.validateUserAccess(doctorIdFromToken, doctorId);
+    public PatientDTO searchPatientById(@PathVariable Long doctorId, @PathVariable Long patientId) {
         Doctor doctor = doctorService.getDoctorById(doctorId);
         Patient patient = patientService.getPatientById(patientId);
-        List<AppointmentDTO> doctorAppointments = getDoctorAppointments(doctorId, request);
+        List<AppointmentDTO> doctorAppointments = getDoctorAppointments(doctorId);
         AppointmentDTO patientAppointment = doctorAppointments
                 .stream()
                 .filter(appointment -> appointment.getPatientId().equals(patientId))
@@ -91,10 +84,7 @@ public class DoctorController {
     public ResponseEntity<ScanResultDTO> addScanResult(
             @PathVariable Long doctorId,
             @PathVariable Long patientId,
-            @RequestBody ScanResultDTO scanResultDTO,
-            HttpServletRequest request) {
-        Long doctorIdFromToken = jwtService.extractID(request);
-        authService.validateUserAccess(doctorIdFromToken, doctorId);
+            @RequestBody ScanResultDTO scanResultDTO){
         Doctor doctor = doctorService.getDoctorById(doctorId);
         Patient patient = patientService.getPatientById(patientId);
         ResponseEntity<ScanResultDTO> scanResult = appointmentClient.addScanResult(doctorId, patientId, scanResultDTO);
@@ -104,7 +94,7 @@ public class DoctorController {
         scanMessageDTO.setDoctorId(doctorId);
         scanMessageDTO.setPatientId(patientId);
         scanMessageDTO.setAppointmentId(appointmentId);
-        scanMessageDTO.setStatus(PatientStatus.TREATMENT_STARTED);
+        scanMessageDTO.setStatus(PatientStatus.UNDERTREATMENT);
 
         // Send message to RabbitMQ
         try {
@@ -122,10 +112,7 @@ public class DoctorController {
     @PostMapping("/{doctorId}/patient/{patientId}/discharge")
     public ResponseEntity<String> dischargePatient(@PathVariable Long doctorId,
                                                    @PathVariable Long patientId,
-                                                   @RequestBody ScanMessageDTO scanMessageDTO,
-                                                   HttpServletRequest request) {
-        Long doctorIdFromToken = jwtService.extractID(request);
-        authService.validateUserAccess(doctorIdFromToken, doctorId);
+                                                   @RequestBody ScanMessageDTO scanMessageDTO) {
         Doctor doctor = doctorService.getDoctorById(doctorId);
         Patient patient = patientService.getPatientById(patientId);
         AppointmentDTO appointmentDTO = appointmentService.getAppointment(patientId, scanMessageDTO.getAppointmentId());
@@ -135,16 +122,15 @@ public class DoctorController {
             String message = doctorService.dischargePatient(patientId, doctorId, scanMessageDTO);
             return new ResponseEntity<>(message, HttpStatus.ACCEPTED);
         } else {
-            throw new AppointmentNotFoundException(
-                    "Appointment with ID " + scanMessageDTO.getAppointmentId()
-                            + " does not belong to doctor with ID " + doctorId);
+            return new ResponseEntity<>("Appointment with ID " + scanMessageDTO.getAppointmentId()
+                    + " does not belong to doctor with ID " + doctorId, HttpStatus.FORBIDDEN);
         }
     }
 
-    @GetMapping("/{doctorId}/availability")
-    public ResponseEntity<List<WorkingHoursDTO>> getAvailability(@PathVariable Long doctorId) {
-        Doctor doctor = doctorService.getDoctorById(doctorId);
-        return doctorService.getAvailability(doctorId);
+    @GetMapping("/{id}/availability")
+    public ResponseEntity<List<WorkingHoursDTO>> getAvailability(@PathVariable Long id){
+        Doctor doctor = doctorService.getDoctorById(id);
+        return doctorService.getAvailability(id);
     }
 
 }

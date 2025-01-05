@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.Map;
 
 @RestControllerAdvice
-public class GlobalExceptionHandler {
+public class globalExceptionHandler {
 
     @ExceptionHandler(AppointmentNotFoundException.class)
     public ResponseEntity<?> handleAppointmentNotFound(AppointmentNotFoundException ex) {
@@ -30,36 +30,10 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(new ErrorResponse("User Not Found", ex.getMessage(), HttpStatus.NOT_FOUND.value()), HttpStatus.NOT_FOUND);
     }
 
-
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> handleGenericException(Exception ex) {
-        String message = ex.getMessage();
-        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR; // Default to 500
-
-        if (message != null && message.contains("CONFLICT")) {
-            status = HttpStatus.CONFLICT;
-        } else if (message != null && message.contains("FORBIDDEN")) {
-            status = HttpStatus.FORBIDDEN;
-        }
-        else if(message != null && message.contains("BAD_REQUEST")) {
-            status = HttpStatus.BAD_REQUEST;
-        }
-        else if(message != null && message.contains("NOT_FOUND")) {
-            status = HttpStatus.NOT_FOUND;
-        }
-
-        return ResponseEntity.status(status)
-                .body(Map.of(
-                        "error", "An unexpected error occurred: " + message,
-                        "status", String.valueOf(status.value()),
-                        "message", status.getReasonPhrase()
-                ));
-
-    }
-
-    @ExceptionHandler(UnauthorizedAccessException.class)
-    public ResponseEntity<?> handleUnauthorizedAccessException(UnauthorizedAccessException ex) {
-        return new ResponseEntity<>(new ErrorResponse("Access Denied", ex.getMessage(), HttpStatus.FORBIDDEN.value()), HttpStatus.FORBIDDEN);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "An unexpected error occurred: " + ex.getMessage()));
     }
 
     @ExceptionHandler(IncorrectPasswordException.class)
@@ -67,20 +41,16 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(new ErrorResponse("Wrong Password", ex.getMessage(), HttpStatus.NOT_FOUND.value()), HttpStatus.NOT_FOUND);
     }
 
-
-    @ExceptionHandler(OtpOrTokenExpiredException.class)
-    public ResponseEntity<String> handleTokenExpired(OtpOrTokenExpiredException ex) {
-        return new ResponseEntity<>(ex.getMessage(), HttpStatus.FORBIDDEN);
+    @ExceptionHandler(TokenExpiredException.class)
+    public ResponseEntity<?> handleTokenExpiredException(TokenExpiredException ex) {
+        return new ResponseEntity<>(new ErrorResponse("Expired token", ex.getMessage(), HttpStatus.NOT_FOUND.value()), HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<String> handleIllegalArgumentException(IllegalArgumentException ex) {
-        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    @ExceptionHandler(userNotFoundException.class)
+    public ResponseEntity<?> handleUserNotFoundException(userNotFoundException ex) {
+        return new ResponseEntity<>(new errorResponse("User Not Found", ex.getMessage(), HttpStatus.NOT_FOUND.value()), HttpStatus.NOT_FOUND);
     }
-    @ExceptionHandler(RateLimitExceedException.class)
-    public ResponseEntity<String> handleRateLimitExceededException(RateLimitExceedException ex) {
-        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(ex.getMessage());
-    }
+>>>>>>> parent of b1a71f2 (some enhancements & seka Redis):userManagementService/userManagementService/src/main/java/com/example/userManagementService/exceptions/globalExceptionHandler.java
 
 
 }

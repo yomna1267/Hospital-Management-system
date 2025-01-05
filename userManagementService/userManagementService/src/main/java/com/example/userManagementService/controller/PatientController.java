@@ -6,12 +6,9 @@ import com.example.userManagementService.dto.ScanResultDTO;
 import com.example.userManagementService.exceptions.PatientNotFoundException;
 import com.example.userManagementService.models.Doctor;
 import com.example.userManagementService.models.Patient;
-import com.example.userManagementService.service.AuthService;
 import com.example.userManagementService.service.DoctorService;
-import com.example.userManagementService.service.JWTService;
 import com.example.userManagementService.service.PatientService;
 import com.example.userManagementService.feign.AppointmentClient;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,23 +24,17 @@ public class PatientController {
     private final PatientService patientService;
     private final AppointmentClient appointmentClient;
     private final DoctorService doctorService;
-    private final AuthService authService;
-    private final JWTService jwtService;
 
     @Autowired
-    public PatientController(PatientService patientService, AppointmentClient appointmentClient, DoctorService doctorService, AuthService authService, JWTService jwtService) {
+    public PatientController(PatientService patientService, AppointmentClient appointmentClient, DoctorService doctorService) {
         this.patientService = patientService;
         this.appointmentClient = appointmentClient;
         this.doctorService = doctorService;
-        this.authService = authService;
-        this.jwtService = jwtService;
     }
 
-    @GetMapping("/{patientId}")
-    public ResponseEntity<Patient> getPatientById(@PathVariable Long patientId, HttpServletRequest request) {
-        Long patientIdFromToken = jwtService.extractID(request);
-        authService.validateUserAccess(patientIdFromToken, patientId);
-        Patient patient = patientService.getPatientById(patientId);
+    @GetMapping("/{id}")
+    public ResponseEntity<Patient> getPatientById(@PathVariable Long id) {
+        Patient patient = patientService.getPatientById(id);
         return new ResponseEntity<>(patient, HttpStatus.OK);
     }
 
@@ -64,9 +55,7 @@ public class PatientController {
     }
 
     @PostMapping("/{patientId}/appointments")
-    public AppointmentDTO bookAppointment(@PathVariable Long patientId, @RequestBody AppointmentDTO newAppointment, HttpServletRequest request) {
-        Long patientIdFromToken = jwtService.extractID(request);
-        authService.validateUserAccess(patientIdFromToken, patientId);
+    public AppointmentDTO bookAppointment(@PathVariable Long patientId, @RequestBody AppointmentDTO newAppointment) {
         Patient patient = patientService.getPatientById(patientId);
         Doctor doctor = doctorService.getDoctorById(newAppointment.getDoctorId());
         return appointmentClient.createAppointment(patientId, newAppointment);
@@ -75,22 +64,14 @@ public class PatientController {
     @PutMapping("/{patientId}/appointments/{appointmentId}")
     public AppointmentDTO rescheduleAppointment(@PathVariable Long patientId,
                                                 @PathVariable Long appointmentId,
-                                                @RequestBody CharSequence newDate,
-                                                HttpServletRequest request) {
-        Long patientIdFromToken = jwtService.extractID(request);
-        authService.validateUserAccess(patientIdFromToken, patientId);
+                                                @RequestBody CharSequence newDate) {
         Patient patient = patientService.getPatientById(patientId);
         return appointmentClient.updateAppointment(patientId, appointmentId, "\"" + newDate + "\"");
     }
 
 
     @DeleteMapping("/{patientId}/appointments/{appointmentId}")
-    public AppointmentDTO cancelAppointment(@PathVariable Long patientId,
-                                            @PathVariable Long appointmentId,
-                                            HttpServletRequest request) {
-
-        Long patientIdFromToken = jwtService.extractID(request);
-        authService.validateUserAccess(patientIdFromToken, patientId);
+    public AppointmentDTO cancelAppointment(@PathVariable Long patientId, @PathVariable Long appointmentId) {
         Patient patient = patientService.getPatientById(patientId);
         if (patient == null) {
             throw new PatientNotFoundException("Patient with ID " + patientId + " not found");
@@ -101,36 +82,23 @@ public class PatientController {
     }
 
     @GetMapping("/{patientId}/appointments")
-    public List<AppointmentDTO> getPatientAppointments(@PathVariable Long patientId, HttpServletRequest request) {
-        Long patientIdFromToken = jwtService.extractID(request);
-        authService.validateUserAccess(patientIdFromToken, patientId);
+    public List<AppointmentDTO> getPatientAppointments(@PathVariable Long patientId) {
         Patient patient = patientService.getPatientById(patientId);
         return appointmentClient.getAppointmentsByPatientId(patientId);
     }
 
     @GetMapping("/{patientId}/appointments/{appointmentId}")
-    public AppointmentDTO getPatientAppointment(@PathVariable Long patientId,
-                                                @PathVariable Long appointmentId,
-                                                HttpServletRequest request) {
-        Long patientIdFromToken = jwtService.extractID(request);
-        authService.validateUserAccess(patientIdFromToken, patientId);
+    public AppointmentDTO getPatientAppointment(@PathVariable Long patientId, @PathVariable Long appointmentId){
         Patient patient = patientService.getPatientById(patientId);
         return appointmentClient.getPatientAppointment(patientId, appointmentId);
     }
     @GetMapping("/{patientId}/scan-results/{scanId}")
-    ResponseEntity<ScanResultDTO> getScanResultById(@PathVariable Long patientId,
-                                                    @PathVariable Long scanId,
-                                                    HttpServletRequest request) {
-        Long patientIdFromToken = jwtService.extractID(request);
-        authService.validateUserAccess(patientIdFromToken, patientId);
+    ResponseEntity<ScanResultDTO> getScanResultById(@PathVariable Long patientId, @PathVariable Long scanId){
         Patient patient = patientService.getPatientById(patientId);
         return appointmentClient.getScanResultById(patientId, scanId);
     }
     @GetMapping("/{patientId}/scan-results")
-    ResponseEntity<List<ScanResultDTO>> getScanResultsForPatient(@PathVariable Long patientId,
-                                                                 HttpServletRequest request) {
-        Long patientIdFromToken = jwtService.extractID(request);
-        authService.validateUserAccess(patientIdFromToken, patientId);
+    ResponseEntity<List<ScanResultDTO>> getScanResultsForPatient(@PathVariable Long patientId){
         Patient patient = patientService.getPatientById(patientId);
         return appointmentClient.getScanResultsForPatient(patientId);
     }

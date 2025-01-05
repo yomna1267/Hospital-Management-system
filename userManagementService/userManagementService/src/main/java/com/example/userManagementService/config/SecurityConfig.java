@@ -24,10 +24,10 @@ public class SecurityConfig {
         http.csrf().disable()
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/login").permitAll()
-                        .requestMatchers("/api/doctor/{id}/availability").permitAll()
-                        .requestMatchers("/api/patient/**").hasRole("PATIENT")
+                         .requestMatchers("/api/patient/**").hasRole("PATIENT")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/doctor/**").hasRole("DOCTOR")
+                       // .requestMatchers("/api/admin/").permitAll()
                         .requestMatchers("api/users/**").permitAll()
                         .anyRequest().authenticated()
                 )
@@ -40,7 +40,7 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
     @Bean
-    public PasswordEncoder encoder() {
+    public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 }
