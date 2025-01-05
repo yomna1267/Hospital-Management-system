@@ -44,6 +44,14 @@ public class NotificationService {
     @Autowired
     private ObjectMapper objectMapper; // To deserialize the incoming message
 
+    private String message;
+
+    @RabbitListener(queues = "securityQueue")
+    public void listenOnSecurityQueue(String message)
+    {
+        this.message = message;
+        System.out.println(this.message);
+    }
     @RabbitListener(queues = "appointmentQueue")
     public void listen(String message) {
         try {
@@ -53,28 +61,31 @@ public class NotificationService {
             Long doctorId = appointmentMessage.getDoctorId();
             String doctorEmail = null;
             try {
-                /*
-                String token = "your-jwt-token-here"; //Token from successful login
+                String token =  this.message;//Token from successful login
 
                 HttpHeaders headers = new HttpHeaders();
                 headers.set("Authorization", "Bearer " + token);
 
                 HttpEntity<String> entity = new HttpEntity<>(headers);
 
-                String url = "http://user-management-service/api/admin/id/" + doctorId;
+                System.out.println(doctorId);
+                String url = "http://USER-MANAGEMENT-SERVICE/api/admin/id/" + doctorId;
 
                 ResponseEntity<User> response = restTemplate.exchange(url, HttpMethod.GET, entity, User.class);
 
-                String doctorEmail = response.getBody().getEmail();
-                 */
+                doctorEmail = response.getBody().getEmail();
+
+                /*
                 String url = "http://user-management-service/api/admin/id/" + doctorId;
                 ResponseEntity<User> response = restTemplate.exchange(url, HttpMethod.GET, null, User.class);
                 doctorEmail = response.getBody().getEmail();
-                //System.out.println(response.getBody().getEmail());
+                */
+                System.out.println(response.getBody().getEmail());
+
             } catch (Exception e) {
                 e.printStackTrace();
                 System.out.println("Failed to fetch doctor email for ID: " + doctorId);
-                return; // Exit the method to prevent further processing
+                return;
             }
             // Handle the notification based on the action type
 
