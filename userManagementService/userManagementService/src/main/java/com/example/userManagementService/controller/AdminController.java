@@ -16,7 +16,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping ("/api/admin")
-@Secured("ROLE_ADMIN")
 public class AdminController {
     private final AdminService adminService;
     public final JWTService jwtService;
@@ -39,12 +38,12 @@ public class AdminController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-//    @DeleteMapping("/{id}")
-//    public ResponseEntity<Void> deleteAdmin(@PathVariable long id) {
-//        Users adminToDelete = adminService.getUserById(id);
-//        adminService.deleteAdmin(adminToDelete);
-//        return ResponseEntity.noContent().build();
-//    }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteAdmin(@PathVariable long id) {
+        Users adminToDelete = adminService.getUserById(id);
+        adminService.deleteAdmin(adminToDelete);
+        return ResponseEntity.noContent().build();
+    }
 
     @GetMapping("/admins")
     public ResponseEntity<List<Users>> getAllAdmins() {
@@ -52,18 +51,12 @@ public class AdminController {
         return ResponseEntity.status(HttpStatus.OK).body(admins);
     }
 
-//    @GetMapping("/id/{id}")
-//    public ResponseEntity<Users> getUserById(@PathVariable long id) {
-//        Users user = adminService.getUserById(id);
-//        return ResponseEntity.status(HttpStatus.OK).body(user);
-//    }
-    @GetMapping("/id")
-    public ResponseEntity<Users> getUserById(HttpServletRequest request) {
-        long id = Long.valueOf(jwtService.extractID(request));
-        System.out.println(id);
+    @GetMapping("/id/{id}")
+    public ResponseEntity<Users> getUserById(@PathVariable long id) {
         Users user = adminService.getUserById(id);
         return ResponseEntity.status(HttpStatus.OK).body(user);
     }
+
 
     @GetMapping("/")
     public ResponseEntity<List<Users>> getAllUsers() {
@@ -71,9 +64,8 @@ public class AdminController {
         return ResponseEntity.status(HttpStatus.OK).body(users);
     }
 
-    @GetMapping("/username")
-    public ResponseEntity<Users> getUserByUsername(HttpServletRequest request){
-        String userName = jwtService.extractUsername(request);
+    @GetMapping("/username/{username}")
+    public ResponseEntity<Users> getUserByUsername(@PathVariable String userName){
         Users user = adminService.getUserByUsername(userName);
         return ResponseEntity.status(HttpStatus.OK).body(user);
     }

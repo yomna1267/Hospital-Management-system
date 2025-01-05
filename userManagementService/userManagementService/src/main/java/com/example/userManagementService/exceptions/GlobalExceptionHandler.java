@@ -47,4 +47,10 @@ public class GlobalExceptionHandler {
     }
 
 
+    @ExceptionHandler(OtpOrTokenExpiredException.class)
+    public ResponseEntity<String> handleOtpExpiredException(OtpOrTokenExpiredException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+
 }

@@ -1,5 +1,7 @@
 package com.example.userManagementService.service;
 
+import com.example.userManagementService.exceptions.OtpOrTokenExpiredException;
+import com.example.userManagementService.exceptions.TokenExpiredException;
 import com.example.userManagementService.models.Users;
 import com.example.userManagementService.repository.UserRepository;
 import io.jsonwebtoken.Claims;
@@ -63,11 +65,28 @@ public class JWTService {
 
 
     public boolean isTokenValid(HttpServletRequest request, String username) {
-        String token = extractTokenFromHeader(request);
-        return username.equals(extractUsername(request)) && !isTokenExpired(token);
+        try {
+            String token = extractTokenFromHeader(request);
+            if (token == null) {
+                throw new IllegalArgumentException("No token in the request header.");
+            }
+            String tokenUsername = extractUsername(request);
+            return username.equals(tokenUsername) && !isTokenExpired(token);
+
+        }
+        catch (OtpOrTokenExpiredException exception){
+           throw new OtpOrTokenExpiredException("Token is expired");
+        }
     }
 
     private boolean isTokenExpired(String token) {
-        return extractClaims(token).getExpiration().before(new Date());
+        Claims claims = extractClaims(token);
+        Date expirationDate = claims.getExpiration();
+        if (expirationDate.before(new Date())) {
+            throw new TokenExpiredException("The token has expired.");
+        }
+
+        return false;
+        //return extractClaims(token).getExpiration().before(new Date());
     }
 }
