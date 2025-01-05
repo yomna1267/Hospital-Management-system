@@ -23,6 +23,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.http.ResponseEntity;
 
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
+
 @Service
 public class NotificationService {
 
@@ -47,6 +53,20 @@ public class NotificationService {
             Long doctorId = appointmentMessage.getDoctorId();
             String doctorEmail = null;
             try {
+                /*
+                String token = "your-jwt-token-here"; //Token from successful login
+
+                HttpHeaders headers = new HttpHeaders();
+                headers.set("Authorization", "Bearer " + token);
+
+                HttpEntity<String> entity = new HttpEntity<>(headers);
+
+                String url = "http://user-management-service/api/admin/id/" + doctorId;
+
+                ResponseEntity<User> response = restTemplate.exchange(url, HttpMethod.GET, entity, User.class);
+
+                String doctorEmail = response.getBody().getEmail();
+                 */
                 String url = "http://user-management-service/api/admin/id/" + doctorId;
                 ResponseEntity<User> response = restTemplate.exchange(url, HttpMethod.GET, null, User.class);
                 doctorEmail = response.getBody().getEmail();
