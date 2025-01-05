@@ -16,7 +16,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping ("/api/admin")
-@Secured("ROLE_ADMIN")
 public class AdminController {
     private final AdminService adminService;
     public final JWTService jwtService;
@@ -65,10 +64,9 @@ public class AdminController {
         return ResponseEntity.status(HttpStatus.OK).body(users);
     }
 
-    @GetMapping("/username")
-    public ResponseEntity<Users> getUserByUsername(HttpServletRequest request){
-        String userName = jwtService.extractUsername(request);
-        Users user = adminService.getUserByUsername(userName);
+    @GetMapping("/username/{username}")
+    public ResponseEntity<Users> getUserByUsername(@PathVariable String username){
+        Users user = adminService.getUserByUsername(username);
         return ResponseEntity.status(HttpStatus.OK).body(user);
     }
 

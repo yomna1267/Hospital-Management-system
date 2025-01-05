@@ -1,4 +1,4 @@
-package com.example.userManagementService.models;
+package com.example.userManagementService.dto;
 
 import lombok.Data;
 

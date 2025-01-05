@@ -1,8 +1,7 @@
 package com.example.userManagementService.controller;
 
-import com.example.userManagementService.models.LoginRequest;
+import com.example.userManagementService.dto.LoginRequest;
 import com.example.userManagementService.service.AuthService;
-import com.example.userManagementService.service.JWTService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;

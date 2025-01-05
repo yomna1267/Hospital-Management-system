@@ -1,5 +1,7 @@
 package com.example.userManagementService.service;
 
+import com.example.userManagementService.exceptions.OtpOrTokenExpiredException;
+import com.example.userManagementService.exceptions.TokenExpiredException;
 import com.example.userManagementService.models.Users;
 import com.example.userManagementService.repository.UserRepository;
 import io.jsonwebtoken.Claims;
@@ -63,11 +65,38 @@ public class JWTService {
 
 
     public boolean isTokenValid(HttpServletRequest request, String username) {
-        String token = extractTokenFromHeader(request);
-        return username.equals(extractUsername(request)) && !isTokenExpired(token);
+        try {
+            String token = extractTokenFromHeader(request);
+            if (token == null) {
+                throw new IllegalArgumentException("Header with no token.");
+            }
+            String tokenUsername = extractUsername(request);
+            if (!username.equals(tokenUsername)) {
+                throw new IllegalArgumentException("No matching between username and token username");
+            }
+            if (isTokenExpired(token)) {
+                throw new OtpOrTokenExpiredException("Expired Token");
+            }
+            return true;
+
+        }catch(OtpOrTokenExpiredException exception){
+                throw exception;
+            } catch(IllegalArgumentException e){
+                throw new IllegalArgumentException("Invalid token: " + e.getMessage());
+            } catch(Exception e){
+                throw new RuntimeException("An unexpected error occurred during token validation.", e);
+            }
     }
 
+
     private boolean isTokenExpired(String token) {
-        return extractClaims(token).getExpiration().before(new Date());
+        Claims claims = extractClaims(token);
+        Date expirationDate = claims.getExpiration();
+        if (expirationDate.before(new Date())) {
+            throw new TokenExpiredException("Expired Token.");
+        }
+
+        return false;
+        //return extractClaims(token).getExpiration().before(new Date());
     }
 }
