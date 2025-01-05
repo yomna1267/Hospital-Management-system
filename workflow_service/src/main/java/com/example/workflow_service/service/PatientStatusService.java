@@ -64,6 +64,7 @@ public class PatientStatusService {
     @RabbitListener(queues = "statusQueue")
     public void listen(String message)
     {
+        System.out.println(message);
         try {
             // Deserialize the incoming JSON message
             PatientStatusMessage patientStatusMessage = objectMapper.readValue(message, PatientStatusMessage.class);

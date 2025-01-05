@@ -2,6 +2,7 @@ package com.example.workflow_service.dto;
 
 import com.example.workflow_service.enums.Patient_Events;
 import com.example.workflow_service.enums.Patient_States;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,9 +11,13 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PatientStatusMessage {
+    @JsonProperty("patientId")
     Long patientId;
+    @JsonProperty("doctorId")
     Long doctorId;
+    @JsonProperty("appointmentId")
     Long appointmentId;
+    @JsonProperty("status")
     private Patient_Events event;
 
     public Long getPatientId() {
