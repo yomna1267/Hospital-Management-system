@@ -1,6 +1,6 @@
 package com.example.userManagementService.enums;
 
 public enum PatientStatus {
-    DISCHARGED,
-    UNDERTREATMENT
+    TREATMENT_COMPLETED,
+    TREATMENT_STARTED
 }

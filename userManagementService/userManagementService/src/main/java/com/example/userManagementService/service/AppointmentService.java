@@ -20,7 +20,7 @@ public class AppointmentService {
 
     public AppointmentDTO getAppointment(Long patientId, Long appointmentId) {
         try {
-            String url = "http://localhost:8081/api/patients/{patientId}/appointments/{appointmentId}";
+            String url = "http://APPOINTMENT-SERVICE/api/patients/{patientId}/appointments/{appointmentId}";
 
             Map<String, Long> uriVariables = new HashMap<>();
             uriVariables.put("patientId", patientId);
@@ -36,7 +36,7 @@ public class AppointmentService {
 
             return response.getBody();
         } catch (HttpClientErrorException.NotFound e) {
-            throw new AppointmentNotFoundException("Appointment with ID " + appointmentId + " not found.");
+            throw new AppointmentNotFoundException("Appointment with ID " + appointmentId + " not found for this patient.");
         }
     }
 
