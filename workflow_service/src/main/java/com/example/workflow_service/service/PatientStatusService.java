@@ -18,7 +18,9 @@ import org.springframework.statemachine.support.DefaultStateMachineContext;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class PatientStatusService {
@@ -40,35 +42,23 @@ public class PatientStatusService {
         this.modelMapper = modelMapper;
     }
 
-    public PatientStatusDTO createRegisteredEvent(Long patientId, Long appointmentId)
-    {
-        PatientStatus patientStatus = new PatientStatus(patientId,appointmentId, Patient_States.REGISTERED);
-
-
-        patientStatusRepository.save(patientStatus);
-        return modelMapper.patientStatusEntityToPatientStatusDto(patientStatus);
-    }
-
-    public PatientStatusDTO handleEvents(Long patientId, Long appointmentId, Patient_Events event)
+    public PatientStatusDTO getStateForOnePatientWithOneAppointment(Long patientId, Long appointmentId)
     {
         PatientStatus patientStatus = patientStatusRepository.findLatestByPatientIdAndAppointmentId(patientId,appointmentId)
                 .orElseThrow(()->new EntityNotFoundException("Patient not found"));
 
-        System.out.println(patientStatus.getId()) ;
-        System.out.println(patientStatus.getState());
-
-        StateMachine<Patient_States, Patient_Events> stateMachine = stateMachineFactory.getStateMachine();
-        stateMachine.start();
-        stateMachine.getStateMachineAccessor()
-                .doWithAllRegions(accessor -> accessor.resetStateMachine(
-                        new DefaultStateMachineContext<>(patientStatus.getState(), null, null, null)));
-        stateMachine.getExtendedState().getVariables().put("patientStatus", patientStatus);
-        stateMachine.sendEvent(event);
-
-        patientStatus.setState(stateMachine.getState().getId());
-        patientStatusRepository.save(patientStatus);
         return modelMapper.patientStatusEntityToPatientStatusDto(patientStatus);
 
+    }
+
+    public List<PatientStatusDTO> getStatesForOnePatient(Long patientId){
+        List<PatientStatus> patientStatuses = patientStatusRepository.findAllByPatientIdOrderByCreatedAtAsc(patientId);
+        if (patientStatuses.isEmpty()) {
+            throw new EntityNotFoundException("No patient status records found for this patient and appointment");
+        }
+        return patientStatuses.stream()
+                .map(modelMapper::patientStatusEntityToPatientStatusDto)
+                .collect(Collectors.toList());
     }
 
     @RabbitListener(queues = "statusQueue")

@@ -9,11 +9,26 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("status")
 public class PatientStatusController {
 
     @Autowired
     private PatientStatusService patientStatusService;
+
+
+    // Endpoint to get all states for a patient
+    @GetMapping("/patient/{patientId}/states")
+    public List<PatientStatusDTO> getPatientStates(@PathVariable Long patientId) {
+        return patientStatusService.getStatesForOnePatient(patientId);
+    }
+
+    // Endpoint to get state for a patient and appointment
+    @GetMapping("/patient/{patientId}/appointment/{appointmentId}/states")
+    public PatientStatusDTO getPatientStateWithSpecificAppointment(@PathVariable Long patientId, @PathVariable Long appointmentId) {
+        return patientStatusService.getStateForOnePatientWithOneAppointment(patientId, appointmentId);
+    }
 
 }

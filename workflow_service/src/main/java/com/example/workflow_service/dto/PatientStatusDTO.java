@@ -15,10 +15,11 @@ import java.time.LocalDateTime;
 @Builder
 public class PatientStatusDTO {
     private Long id;
-    private Long patientId;
-    private long appointmentId;
-    private Patient_States state;
+    private Long appointmentId;
     private LocalDateTime createdAt;
+    private Long patientId;
+    private Patient_States state;
+    private LocalDateTime updatedAt;
 
 
     public Long getId() {
@@ -59,5 +60,13 @@ public class PatientStatusDTO {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }
