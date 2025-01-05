@@ -37,7 +37,7 @@ public class appointmentServ {
     private doctorClient doctorClient;
 
     private static final String APPOINTMENT_QUEUE = "appointmentQueue";
-    private static final String STATUS_QUEUE = "statueQueue";
+    private static final String STATUS_QUEUE = "statusQueue";
 
 
     private boolean isWithinDoctorAvailability(Long doctorId, LocalDateTime appointmentDate) {
