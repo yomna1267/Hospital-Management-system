@@ -21,14 +21,15 @@ public class PatientStatusController {
 
     // Endpoint to get all states for a patient
     @GetMapping("/patient/{patientId}/states")
-    public List<PatientStatusDTO> getPatientStates(@PathVariable Long patientId) {
+    public ResponseEntity<List<PatientStatusDTO>> getPatientStates(@PathVariable Long patientId) {
         return patientStatusService.getStatesForOnePatient(patientId);
     }
 
     // Endpoint to get state for a patient and appointment
     @GetMapping("/patient/{patientId}/appointment/{appointmentId}/states")
-    public PatientStatusDTO getPatientStateWithSpecificAppointment(@PathVariable Long patientId, @PathVariable Long appointmentId) {
+    public ResponseEntity<PatientStatusDTO> getPatientStateWithSpecificAppointment(
+            @PathVariable Long patientId,
+            @PathVariable Long appointmentId) {
         return patientStatusService.getStateForOnePatientWithOneAppointment(patientId, appointmentId);
     }
-
 }

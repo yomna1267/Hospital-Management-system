@@ -12,6 +12,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.modelmapper.ModelMapper;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.config.StateMachineFactory;
 import org.springframework.statemachine.support.DefaultStateMachineContext;
@@ -42,23 +43,37 @@ public class PatientStatusService {
         this.modelMapper = modelMapper;
     }
 
-    public PatientStatusDTO getStateForOnePatientWithOneAppointment(Long patientId, Long appointmentId)
-    {
-        PatientStatus patientStatus = patientStatusRepository.findLatestByPatientIdAndAppointmentId(patientId,appointmentId)
-                .orElseThrow(()->new EntityNotFoundException("Patient not found"));
 
-        return modelMapper.patientStatusEntityToPatientStatusDto(patientStatus);
+    public ResponseEntity<PatientStatusDTO> getStateForOnePatientWithOneAppointment(Long patientId, Long appointmentId) {
+        try {
+            PatientStatus patientStatus = patientStatusRepository.findLatestByPatientIdAndAppointmentId(patientId, appointmentId)
+                    .orElseThrow(() -> new EntityNotFoundException("Patient not found"));
 
+            PatientStatusDTO patientStatusDTO = modelMapper.patientStatusEntityToPatientStatusDto(patientStatus);
+            return ResponseEntity.ok(patientStatusDTO); // Return HTTP 200 with the DTO
+        } catch (EntityNotFoundException ex) {
+            return ResponseEntity.notFound().build(); // Return HTTP 404 if not found
+        } catch (Exception ex) {
+            return ResponseEntity.status(500).build(); // Return HTTP 500 for other errors
+        }
     }
 
-    public List<PatientStatusDTO> getStatesForOnePatient(Long patientId){
-        List<PatientStatus> patientStatuses = patientStatusRepository.findAllByPatientIdOrderByCreatedAtAsc(patientId);
-        if (patientStatuses.isEmpty()) {
-            throw new EntityNotFoundException("No patient status records found for this patient and appointment");
+    public ResponseEntity<List<PatientStatusDTO>> getStatesForOnePatient(Long patientId) {
+        try {
+            List<PatientStatus> patientStatuses = patientStatusRepository.findAllByPatientIdOrderByCreatedAtAsc(patientId);
+
+            if (patientStatuses.isEmpty()) {
+                return ResponseEntity.notFound().build(); // Return HTTP 404 if no records are found
+            }
+
+            List<PatientStatusDTO> patientStatusDTOs = patientStatuses.stream()
+                    .map(modelMapper::patientStatusEntityToPatientStatusDto)
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.ok(patientStatusDTOs); // Return HTTP 200 with the list
+        } catch (Exception ex) {
+            return ResponseEntity.status(500).build(); // Return HTTP 500 for other errors
         }
-        return patientStatuses.stream()
-                .map(modelMapper::patientStatusEntityToPatientStatusDto)
-                .collect(Collectors.toList());
     }
 
     @RabbitListener(queues = "statusQueue")
