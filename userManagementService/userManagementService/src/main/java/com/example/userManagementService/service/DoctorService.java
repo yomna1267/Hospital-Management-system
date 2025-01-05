@@ -70,7 +70,7 @@ public class DoctorService {
         scanMessageDTO.setDoctorId(doctorId);
         scanMessageDTO.setPatientId(patientId);
         scanMessageDTO.setAppointmentId(appointmentId);
-        scanMessageDTO.setStatus(PatientStatus.DISCHARGED);
+        scanMessageDTO.setStatus(PatientStatus.TREATMENT_COMPLETED);
 
         // Send message to RabbitMQ
         try {

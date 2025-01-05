@@ -4,6 +4,8 @@ import com.example.userManagementService.models.Doctor;
 import com.example.userManagementService.models.Patient;
 import com.example.userManagementService.models.Users;
 import com.example.userManagementService.service.AdminService;
+import com.example.userManagementService.service.JWTService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
@@ -17,9 +19,11 @@ import java.util.Map;
 @Secured("ROLE_ADMIN")
 public class AdminController {
     private final AdminService adminService;
+    public final JWTService jwtService;
 
-    public AdminController(AdminService adminService) {
+    public AdminController(AdminService adminService, JWTService jwtService) {
         this.adminService = adminService;
+        this.jwtService = jwtService;
     }
 
     //ADMIN
@@ -54,14 +58,16 @@ public class AdminController {
         return ResponseEntity.status(HttpStatus.OK).body(user);
     }
 
+
     @GetMapping("/")
     public ResponseEntity<List<Users>> getAllUsers() {
         List<Users> users = adminService.getAllUsers();
         return ResponseEntity.status(HttpStatus.OK).body(users);
     }
 
-    @GetMapping("/username/{userName}")
-    public ResponseEntity<Users> getUserByUsername(@PathVariable String userName){
+    @GetMapping("/username")
+    public ResponseEntity<Users> getUserByUsername(HttpServletRequest request){
+        String userName = jwtService.extractUsername(request);
         Users user = adminService.getUserByUsername(userName);
         return ResponseEntity.status(HttpStatus.OK).body(user);
     }

@@ -1,11 +1,14 @@
 package com.example.userManagementService.exceptions;
 
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.server.ResponseStatusException;
-
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.SignatureException;
+import io.jsonwebtoken.JwtException;
 import java.util.Map;
 
 @RestControllerAdvice
@@ -29,7 +32,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> handleGenericException(Exception ex) {
         String message = ex.getMessage();
-        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR; // Default to 500
+        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
 
         if (message != null && message.contains("CONFLICT")) {
             status = HttpStatus.CONFLICT;
@@ -50,6 +53,11 @@ public class GlobalExceptionHandler {
                         "message", status.getReasonPhrase()
                 ));
     }
+    @ExceptionHandler(UnauthorizedAccessException.class)
+    public ResponseEntity<?> handleUnauthorizedAccessException(UnauthorizedAccessException ex) {
+        return new ResponseEntity<>(new ErrorResponse("Access Denied", ex.getMessage(), HttpStatus.FORBIDDEN.value()), HttpStatus.FORBIDDEN);
+    }
+
 
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<?> handleUserNotFoundException(UserNotFoundException ex) {

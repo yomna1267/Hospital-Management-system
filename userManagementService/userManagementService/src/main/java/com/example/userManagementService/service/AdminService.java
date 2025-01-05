@@ -11,6 +11,7 @@ import com.example.userManagementService.repository.DoctorRepository;
 import com.example.userManagementService.repository.PatientRepository;
 import com.example.userManagementService.repository.UserRepository;
 import com.example.userManagementService.repository.RoleRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -47,8 +48,8 @@ public class AdminService {
         newUser.setPassword(passwordEncoder.encode(password));
         userRepository.save(newUser);
         Map<String, String> response = new HashMap<>();
-        response.put("Username", String.valueOf(newUser.getUsername()));
-        response.put("Password", password);
+        response.put("username", String.valueOf(newUser.getUsername()));
+        response.put("password", password);
         return response;
     }
 
@@ -83,11 +84,6 @@ public class AdminService {
     }
 
     @Transactional
-    public void deleteAdmin(Users adminToDelete) {
-        userRepository.delete(adminToDelete);
-    }
-
-    @Transactional
     public List<Users> getAllAdmins() {
         List<Users> admins = userRepository.findByRoleName("ADMIN");
         if (admins.isEmpty()) {
@@ -105,6 +101,11 @@ public class AdminService {
         return users;
     }
 
+    @Transactional
+    public void deleteAdmin(Users adminToDelete) {
+        userRepository.delete(adminToDelete);
+    }
+
 
     //DOCTOR
     @Transactional
@@ -119,8 +120,8 @@ public class AdminService {
         newDoctor.setId(savedUser.getId());
         doctorRepository.save(newDoctor);
         Map<String,String> response = new HashMap<>();
-        response.put("Username", newDoctor.getUser().getUsername());
-        response.put("Password", password);
+        response.put("username", newDoctor.getUser().getUsername());
+        response.put("password", password);
         return response;
     }
 
@@ -191,8 +192,8 @@ public class AdminService {
         newPatient.setId(savedUser.getId());
         patientRepository.save(newPatient);
         Map<String, String> response = new HashMap<>();
-        response.put("Username", newPatient.getUser().getUsername());
-        response.put("Password", password);
+        response.put("username", newPatient.getUser().getUsername());
+        response.put("password", password);
         return response;
     }
 

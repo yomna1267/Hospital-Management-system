@@ -1,5 +1,7 @@
 package com.example.userManagementService.service;
 
+import com.example.userManagementService.exceptions.TokenExpiredException;
+import com.example.userManagementService.exceptions.UnauthorizedAccessException;
 import com.example.userManagementService.models.LoginRequest;
 import com.example.userManagementService.models.Users;
 import com.example.userManagementService.repository.UserRepository;
@@ -64,15 +66,15 @@ public class AuthService {
         }
 
         refreshToken = authHeader.substring(7).trim();
-        username = jwtService.extractUsername(refreshToken);
+        username = jwtService.extractUsername(request);
 
         System.out.println(refreshToken);
         if (username != null) {
             Optional<Users> user = userRepository.findByUsername(username);
             System.out.println(accessToken);
             System.out.println(newRefreshToken);
-            System.out.println(jwtService.isTokenValid(refreshToken,user.get().getUsername()));
-            if (jwtService.isTokenValid(refreshToken, user.get().getUsername())) {
+            System.out.println(jwtService.isTokenValid(request,user.get().getUsername()));
+            if (jwtService.isTokenValid(request, user.get().getUsername())) {
                 accessToken = jwtService.generateToken(username,user.get().getRole().getName(),accessTokenExpiration);
                 newRefreshToken = jwtService.generateToken(username,null,refreshTokenExpiration);
             }
@@ -95,6 +97,17 @@ public class AuthService {
         token = authHeader.substring(7).trim();
         jwtService.extractClaims(token).setExpiration(new Date(System.currentTimeMillis()));
     }
+
+    public  void validateUserAccess(Long userIdFromToken, Long requestedUserId) {
+        if (userIdFromToken == null) {
+            throw new TokenExpiredException("Invalid or missing token.");
+        }
+
+        if (!userIdFromToken.equals(requestedUserId)) {
+            throw new UnauthorizedAccessException("You do not have access to view this resource.");
+        }
+    }
+
 
 }
 
